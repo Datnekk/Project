@@ -1,6 +1,30 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+
 namespace be.Extensions;
 
-public class AuthenticationExtensions
+public static class AuthenticationExtensions
 {
-    
+    public static IServiceCollection AddAuthenticationServices(this IServiceCollection services, IConfiguration configuration){
+        services.AddAuthentication(options => {
+            options.DefaultAuthenticateScheme = 
+            options.DefaultChallengeScheme =
+            options.DefaultForbidScheme =
+            options.DefaultScheme = 
+            options.DefaultSignInScheme =
+            options.DefaultSignOutScheme = JwtBearerDefaults.AuthenticationScheme;
+        }).AddJwtBearer(options => {
+            options.TokenValidationParameters = new TokenValidationParameters{
+                ValidateIssuer = true,
+                ValidIssuer = configuration["Jwt:Issuer"],
+                ValidateAudience = true,
+                ValidAudience = configuration["Jwt:Audience"],
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"])),
+            };
+        });
+
+        return services;
+    }
 }

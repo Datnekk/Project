@@ -1,7 +1,7 @@
 using be.Helpers;
 using be.Models;
 
-namespace be.Interfaces
+namespace be.Repositories
 {
     public interface IUserRepository
     {

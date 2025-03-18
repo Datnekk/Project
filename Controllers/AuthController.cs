@@ -1,7 +1,7 @@
 using AutoMapper;
 using be.Dtos.Auth;
-using be.Interfaces;
 using be.Models;
+using be.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

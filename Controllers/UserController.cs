@@ -2,8 +2,8 @@ using AutoMapper;
 using be.Dtos.Booking;
 using be.Dtos.Users;
 using be.Helpers;
-using be.Interfaces;
 using be.Models;
+using be.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
