@@ -1,0 +1,4 @@
+.vscode
+# Ignore build outputs
+bin/
+obj/
