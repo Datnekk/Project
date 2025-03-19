@@ -1,75 +1,45 @@
-using be.Data;
-using be.Helpers;
+using System.Linq.Expressions;
 using be.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace be.Repositories.impl
 {
     public class RoomRepository : IRoomRepository
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IRepositoryAsync<Room> _roomRepository;
 
-        public RoomRepository(ApplicationDbContext context)
+        public RoomRepository(IRepositoryAsync<Room> roomRepository)
         {
-            _context = context;
+            _roomRepository = roomRepository;
         }
 
-        public async Task<Room> CreateAsync(Room room)
+        public async Task AddAsync(Room entity, CancellationToken cancellationToken = default)
         {
-            await _context.Rooms.AddAsync(room);
-            await _context.SaveChangesAsync();
-            return room;
+            await _roomRepository.AddAsync(entity, cancellationToken);
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
         {
-            var room = await _context.Rooms.FirstOrDefaultAsync(x => x.RoomId == id);
-
-            if (room == null)
-                return false;
-
-            _context.Rooms.Remove(room);
-            await _context.SaveChangesAsync();
-            return true;
+            await _roomRepository.DeleteAsync(id, cancellationToken);
         }
 
-        public async Task<IEnumerable<Room>> GetAllAsync(RoomQueryObject query)
+        public async Task<(IEnumerable<Room> Data, int TotalCount)> GetAsync(
+            Expression<Func<Room, bool>> filter,
+            Func<IQueryable<Room>, IOrderedQueryable<Room>> orderBy, 
+            int? pageNumber = null, int? pageSize = null, 
+            CancellationToken cancellationToken = default)
         {
-            var room = _context.Rooms.AsQueryable();
-
-            if (query.Location != null)
-                room = room.Where(x => x.Location == query.Location);
-
-            if (query.IsAvailable != null)
-                room = room.Where(x => x.IsAvailable == query.IsAvailable);
-
-            if (query.RoomType != null)
-                room = room.Where(x => x.RoomType == query.RoomType);
-
-            if (query.MinPrice != null)
-                room = room.Where(x => x.Price >= query.MinPrice);
-
-            if (query.MaxPrice != null)
-                room = room.Where(x => x.Price <= query.MaxPrice);
-
-            return await room.ToListAsync();  
+            return await _roomRepository.GetAsync(filter, orderBy, pageNumber, pageSize, cancellationToken);
         }
 
-        public async Task<Room?> GetByIdAsync(int id)
+        public async Task<Room> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
-            return await _context.Rooms.FindAsync(id);  
+            return await _roomRepository.GetByIdAsync(id, cancellationToken);
         }
 
-        public async Task<Room?> UpdateAsync(int id, Room room)
+        public async Task UpdateAsync(Room entity, CancellationToken cancellationToken = default)
         {
-            var existingRooms = await _context.Rooms.FirstOrDefaultAsync(x => x.RoomId == id);
-
-            if (existingRooms == null)
-                return null;
-
-            _context.Entry(existingRooms).CurrentValues.SetValues(room);
-            await _context.SaveChangesAsync();
-            return existingRooms;
+            await _roomRepository.UpdateAsync(entity, cancellationToken);
         }
     }
+
 }

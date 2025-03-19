@@ -6,7 +6,7 @@ namespace be.Extensions
 {
     public static class IdentityExtensions
     {
-        public static IServiceCollection AddIdentityServices(this IServiceCollection services, IConfiguration configuration){
+        public static IServiceCollection AddIdentityServices(this IServiceCollection services){
             services.AddIdentity<User, IdentityRole<int>>(options => {
                     options.User.RequireUniqueEmail = true;
                     options.Password.RequireDigit = true;

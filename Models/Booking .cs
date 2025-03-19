@@ -22,13 +22,13 @@ namespace be.Models
         public BookingStatus Status { get; set; } = BookingStatus.Pending;
 
         [ForeignKey("UserId")]
-        public User User { get; set; }
+        public User User { get; set; } = null!;
 
         [ForeignKey("RoomId")]
-        public Room Room { get; set; }
+        public Room Room { get; set; } = null!;
 
-        public Payment Payment { get; set; }
+        public Payment? Payment { get; set; }
 
-        public ICollection<BookingService> BookingServices { get; set; } = [];
+        public ICollection<BookingService> BookingServices { get; set; } = new List<BookingService>();
     }
 }

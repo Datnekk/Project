@@ -60,7 +60,9 @@ namespace be.Controllers
 
                 var user = _mapper.Map<User>(registerDTO);
 
-                var createdUser = await _userManager.CreateAsync(user, registerDTO.Password);
+                var hashedPassword = new PasswordHasher<User>().HashPassword(user, registerDTO.Password);
+
+                var createdUser = await _userManager.CreateAsync(user, hashedPassword);
 
                 if(createdUser.Succeeded)
                 {

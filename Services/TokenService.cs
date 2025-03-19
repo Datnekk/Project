@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using be.Models;
 using be.Repositories;
@@ -11,6 +12,7 @@ namespace be.Services
     {
         private readonly IConfiguration _configuration;
         private readonly SymmetricSecurityKey _key;
+        private readonly IUserRepository _userRepository;
         public TokenService(IConfiguration configuration)
         {
             _configuration = configuration;
@@ -38,6 +40,20 @@ namespace be.Services
             var token = tokenHandler.CreateToken(tokenDescriptor);
 
             return tokenHandler.WriteToken(token);
+        }
+
+        public Task<string> GenerateAndSaveRefreshToken(User user)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        public string GenerateRefreshToken()
+        {
+            var randomNumber = new byte[32];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomNumber);
+            return Convert.ToBase64String(randomNumber);
         }
     }
 }

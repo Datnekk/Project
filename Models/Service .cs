@@ -7,14 +7,10 @@ namespace be.Models
     {
     [Key]
     public int ServiceId { get; set; }
-
-    [Required]
     public string ServiceName { get; set; }
 
     [Column(TypeName = "decimal(10,2)")]
     public decimal Price { get; set; }
-
-    // Many-to-Many Relationship
-    public ICollection<BookingService> BookingServices { get; set; }
+    public ICollection<BookingService> BookingServices { get; set; } = new List<BookingService>();
     }
 }
