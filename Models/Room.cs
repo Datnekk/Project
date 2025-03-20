@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using be.Models.enums;
 
 namespace be.Models
 {
@@ -8,12 +7,17 @@ namespace be.Models
     {
     [Key]
     public int RoomId { get; set; }
-    public RoomType RoomType { get; set; } 
+    public int UserId { get; set; }
+    public string RoomName { get; set; }
     public string Location { get; set; }
     public string? Description { get; set; }
+
     [Column(TypeName = "decimal(18, 2)")]
     public decimal Price { get; set; }
-    public bool IsAvailable { get; set; }
-    public ICollection<Booking> Bookings { get; set; }
+    public bool IsAvailable { get; set; } = true;
+
+    [ForeignKey("UserId")]
+    public User User { get; set; } = null!;
+    public ICollection<RoomService> RoomServices { get; set; } = [];
     }
 }

@@ -1,5 +1,6 @@
 using be.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace be.Repositories.impl
 {
@@ -34,6 +35,11 @@ namespace be.Repositories.impl
         {
             var user = await _userManager.FindByEmailAsync(email) ?? throw new KeyNotFoundException($"User with email {email} not found.");
             return user;
+        }
+
+        public async Task<IEnumerable<User>> GetAsync(CancellationToken cancellationToken = default)
+        {
+            return await _userManager.Users.ToListAsync();
         }
 
         public async Task<bool> CreateAsync(User user, string password, CancellationToken cancellationToken = default)

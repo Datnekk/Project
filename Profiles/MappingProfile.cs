@@ -14,13 +14,22 @@ namespace be.Profiles
             CreateMap<User, UserReadDTO>(); // GET request mapping
 
             CreateMap<RegisterDTO, User>()
-                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Name)); // POST request mapping
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.UserName))
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
+                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Address)); // POST request mapping
+
+            CreateMap<User, NewUserDTO>()
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.UserName))
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email));
+
+            CreateMap<User, AuthResponseDTO>()
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.UserName))
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email));
             
             CreateMap<UserUpdateDTO, User>(); // PUT request mapping
 
             // Room Mappings
-            CreateMap<Room, RoomReadDTO>()
-                .ForMember(dest => dest.RoomType, opt => opt.MapFrom(src => src.RoomType.ToString())); // GET request mapping
+            CreateMap<Room, RoomReadDTO>(); // GET request mapping
 
             CreateMap<RoomCreateDTO, Room>(); // POST request mapping
 
@@ -34,6 +43,9 @@ namespace be.Profiles
             CreateMap<BookingCreateDTO, Booking>(); // POST request mapping
 
             CreateMap<BookingUpdateDTO, Booking>(); // PUT request mapping
+
+            //Services Mappings
+            
         }
     }
 }

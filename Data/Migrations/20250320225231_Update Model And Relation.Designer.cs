@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using be.Data;
 
@@ -11,9 +12,11 @@ using be.Data;
 namespace Final_Project.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250320225231_Update Model And Relation")]
+    partial class UpdateModelAndRelation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -192,6 +195,9 @@ namespace Final_Project.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("PaymentId")
+                        .HasColumnType("int");
+
                     b.Property<int>("RoomId")
                         .HasColumnType("int");
 
@@ -252,6 +258,9 @@ namespace Final_Project.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RoomId"));
 
+                    b.Property<int?>("BookingId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
@@ -304,6 +313,9 @@ namespace Final_Project.Migrations
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RoomId")
+                        .HasColumnType("int");
 
                     b.Property<string>("ServiceName")
                         .IsRequired()
@@ -447,7 +459,7 @@ namespace Final_Project.Migrations
             modelBuilder.Entity("be.Models.Booking", b =>
                 {
                     b.HasOne("be.Models.Room", "Room")
-                        .WithOne()
+                        .WithOne("Booking")
                         .HasForeignKey("be.Models.Booking", "RoomId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -466,7 +478,7 @@ namespace Final_Project.Migrations
             modelBuilder.Entity("be.Models.Payment", b =>
                 {
                     b.HasOne("be.Models.Booking", "Booking")
-                        .WithOne()
+                        .WithOne("Payment")
                         .HasForeignKey("be.Models.Payment", "BookingId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -512,8 +524,16 @@ namespace Final_Project.Migrations
                     b.Navigation("Service");
                 });
 
+            modelBuilder.Entity("be.Models.Booking", b =>
+                {
+                    b.Navigation("Payment");
+                });
+
             modelBuilder.Entity("be.Models.Room", b =>
                 {
+                    b.Navigation("Booking")
+                        .IsRequired();
+
                     b.Navigation("RoomServices");
                 });
 

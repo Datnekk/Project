@@ -8,17 +8,11 @@ namespace be.Models
     {
         [Key]
         public int BookingId { get; set; }
-
         public int UserId { get; set; }
-
         public int RoomId { get; set; }
-
         public DateTime CheckInDate { get; set; }
-
         public DateTime CheckOutDate { get; set; }
-
         public DateTime CreatedAt { get; set; } = DateTime.Now;
-        
         public BookingStatus Status { get; set; } = BookingStatus.Pending;
 
         [ForeignKey("UserId")]
@@ -26,9 +20,5 @@ namespace be.Models
 
         [ForeignKey("RoomId")]
         public Room Room { get; set; } = null!;
-
-        public Payment? Payment { get; set; }
-
-        public ICollection<BookingService> BookingServices { get; set; } = new List<BookingService>();
     }
 }

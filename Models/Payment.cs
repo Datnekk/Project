@@ -9,6 +9,7 @@ namespace be.Models
     [Key]
     public int PaymentId { get; set; }
     public int BookingId { get; set; }
+    public int UserId { get; set; }
     
     [Column(TypeName = "decimal(18, 2)")]
     public decimal Amount { get; set; }
@@ -17,5 +18,8 @@ namespace be.Models
 
     [ForeignKey("BookingId")]
     public Booking Booking { get; set; }
+    
+    [ForeignKey("UserId")]
+    public User User { get; set; }
     }
 }

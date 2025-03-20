@@ -1,9 +1,11 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
+using be.Data;
 using be.Models;
 using be.Repositories;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 namespace be.Services
@@ -12,48 +14,102 @@ namespace be.Services
     {
         private readonly IConfiguration _configuration;
         private readonly SymmetricSecurityKey _key;
-        private readonly IUserRepository _userRepository;
-        public TokenService(IConfiguration configuration)
+        private readonly ApplicationDbContext _context;
+        private readonly UserManager<User> _userManager;
+        public TokenService(IConfiguration configuration, UserManager<User> userManager, ApplicationDbContext context)
         {
             _configuration = configuration;
+            _userManager = userManager;
+            _context = context;
             _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Key"]));
         }
-        public string CreateToken(User user)
+        public async Task<string> CreateJWTTokenAsync(User user)
         {
-            var claims = new List<Claim>{
-                new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(JwtRegisteredClaimNames.Name, user.Name),
+            var jwtKey = _configuration["JWT:Key"];
+            var issuer = _configuration["JWT:Issuer"];
+            var audience = _configuration["JWT:Audience"];
+            var expiryDays = int.TryParse(_configuration["JWT:ExpiryDays"], out var days) ? days : 1;
+
+            if (string.IsNullOrEmpty(jwtKey) || string.IsNullOrEmpty(issuer) || string.IsNullOrEmpty(audience))
+            {
+                throw new InvalidOperationException("JWT configuration values are missing.");
+            }
+
+            var claims = new List<Claim>
+            {
+                new(JwtRegisteredClaimNames.Sub, user.Id.ToString()), 
+                new(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
+                new(JwtRegisteredClaimNames.Name, user.Name ?? string.Empty),
+                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()) 
             };
+
+            var roles = await _userManager.GetRolesAsync(user);
+
+            claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
             var creds = new SigningCredentials(_key, SecurityAlgorithms.HmacSha512Signature);
 
-            var tokenDescriptor= new SecurityTokenDescriptor{
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.Now.AddDays(7),
+                Expires = DateTime.UtcNow.AddDays(expiryDays),
                 SigningCredentials = creds,
-                Issuer = _configuration["JWT:Issuer"],
-                Audience = _configuration["JWT:Audience"],
+                Issuer = issuer,
+                Audience = audience
             };
 
             var tokenHandler = new JwtSecurityTokenHandler();
-
             var token = tokenHandler.CreateToken(tokenDescriptor);
-
             return tokenHandler.WriteToken(token);
         }
 
-        public Task<string> GenerateAndSaveRefreshToken(User user)
+        public async Task<string> GenerateRefreshTokenAsync(int userId)
         {
-            throw new NotImplementedException();
+            var user = await _userManager.FindByIdAsync(userId.ToString()) ?? throw new KeyNotFoundException($"User with ID {userId} not found.");
+            return await _userManager.GenerateUserTokenAsync(user, "RefreshTokenProvider", "RefreshToken");
         }
 
-
-        public string GenerateRefreshToken()
+        public async Task<string> GenerateEmailConfirmationTokenAsync(int userId)
         {
-            var randomNumber = new byte[32];
-            using var rng = RandomNumberGenerator.Create();
-            rng.GetBytes(randomNumber);
-            return Convert.ToBase64String(randomNumber);
+            var user = await _userManager.FindByIdAsync(userId.ToString()) ?? throw new KeyNotFoundException($"User with ID {userId} not found.");
+            return await _userManager.GenerateEmailConfirmationTokenAsync(user);
         }
+
+        public async Task<(bool Succeeded, string[] Errors)> ConfirmEmailAsync(int userId, string token)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null)
+            {
+                return (false, Array.Empty<string>());
+            }
+            var result = await _userManager.ConfirmEmailAsync(user, token);
+            return (result.Succeeded, result.Succeeded ? [] : result.Errors.Select(e => e.Description).ToArray());
+        }
+
+        public async Task<(bool Succeeded, string Error)> VerifyRefreshTokenAsync(int userId, string token)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null)
+            {
+                return (false, string.Empty);
+            }
+            var isValid = await _userManager.VerifyUserTokenAsync(user, "RefreshTokenProvider", "RefreshToken", token);
+            return (isValid, isValid ? string.Empty : "Invalid refresh token.");
+        }
+
+        public async Task RemoveRefreshTokenAsync(int userId)
+        {
+            var token = await _context.UserTokens
+                .FirstOrDefaultAsync(t => t.UserId == userId && t.LoginProvider == "RefreshTokenProvider" && t.Name == "RefreshToken");
+            if (token != null)
+            {
+                _context.UserTokens.Remove(token);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public string GetIssuer() => _configuration["JWT:Issuer"] ?? string.Empty;
+        public string GetAudience() => _configuration["JWT:Audience"] ?? string.Empty;
+        public SymmetricSecurityKey GetKey() => _key;
     }
 }

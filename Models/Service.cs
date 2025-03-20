@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace be.Models
 {
@@ -8,6 +7,7 @@ namespace be.Models
     [Key]
     public int ServiceId { get; set; }
     public string ServiceName { get; set; }
-    public ICollection<BookingService> BookingServices { get; set; } = new List<BookingService>();
+    public string? Description { get; set; }
+    public ICollection<RoomService> RoomServices { get; set; } = [];
     }
 }

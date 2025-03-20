@@ -1,10 +1,13 @@
+using System.IdentityModel.Tokens.Jwt;
 using AutoMapper;
 using be.Dtos.Auth;
 using be.Models;
 using be.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace be.Controllers
 {
@@ -15,7 +18,6 @@ namespace be.Controllers
         private readonly IMapper _mapper;
         private readonly UserManager<User> _userManager;
         private readonly ITokenService _tokenService;
-
         private readonly SignInManager<User> _signInManager;
 
         public AuthController(IMapper mapper, UserManager<User> userManager, ITokenService tokenService, SignInManager<User> signInManager)
@@ -39,13 +41,14 @@ namespace be.Controllers
 
             if(!res.Succeeded) return Unauthorized("UserName/Password Not Found");
 
-            return Ok(
-                new NewUserDTO {
-                    UserName = user.UserName,
-                    Email = user.Email,
-                    Token = _tokenService.CreateToken(user),
-                 }
-            );
+            var accessToken = await _tokenService.CreateJWTTokenAsync(user);
+            var refreshToken = await _tokenService.GenerateRefreshTokenAsync(user.Id);
+
+            var response = _mapper.Map<AuthResponseDTO>(user);
+            response.AccessToken = accessToken;
+            response.RefreshToken = refreshToken;
+
+            return Ok(response);
         }
 
         [HttpPost("register")]
@@ -53,46 +56,137 @@ namespace be.Controllers
         {
             try
             {
-                if(!ModelState.IsValid)
+                if (!ModelState.IsValid)
                 {
-                    throw new Exception("Invalid data");
+                    return BadRequest(ModelState);
                 }
 
                 var user = _mapper.Map<User>(registerDTO);
+                user.NormalizedUserName = _userManager.NormalizeName(registerDTO.UserName);
+                user.NormalizedEmail = _userManager.NormalizeEmail(registerDTO.Email);
 
-                var hashedPassword = new PasswordHasher<User>().HashPassword(user, registerDTO.Password);
-
-                var createdUser = await _userManager.CreateAsync(user, hashedPassword);
-
-                if(createdUser.Succeeded)
-                {
-                    var roleUser = await _userManager.AddToRoleAsync(user, "User");
-
-                    if(roleUser.Succeeded){
-                        return Ok(
-                            new NewUserDTO
-                            {
-                                UserName = user.UserName,
-                                Email = user.Email,
-                                Token = _tokenService.CreateToken(user),
-                            }
-                        );
-                    }
-                    else
-                    {
-                        return StatusCode(500, roleUser.Errors);
-                    }
-                }
-                else
+                var createdUser = await _userManager.CreateAsync(user, registerDTO.Password);
+                if (!createdUser.Succeeded)
                 {
                     return StatusCode(500, createdUser.Errors);
-
                 }
+
+                var roleResult = await _userManager.AddToRoleAsync(user, "User");
+                if (!roleResult.Succeeded)
+                {
+                    await _userManager.DeleteAsync(user);
+                    return StatusCode(500, roleResult.Errors);
+                }
+
+                var emailToken = await _tokenService.GenerateEmailConfirmationTokenAsync(user.Id);
+
+                //Implement send confirmation email here
+
+                var accessToken = await _tokenService.CreateJWTTokenAsync(user);
+                var refreshToken = await _tokenService.GenerateRefreshTokenAsync(user.Id);
+
+                var response = _mapper.Map<AuthResponseDTO>(user);
+                response.AccessToken = accessToken;
+                response.RefreshToken = refreshToken;
+
+                return Ok(new { User = response, EmailConfirmationToken = emailToken });
             }
             catch (Exception e)
             {
                 return StatusCode(500, e.Message);
             }
+        }
+
+        [HttpPost("confirm-email")]
+        public async Task<IActionResult> ConfirmEmailAsync([FromBody] ConfirmEmailDTO confirmEmailDTO)
+        {
+            var (succeeded, errors) = await _tokenService.ConfirmEmailAsync(confirmEmailDTO.UserId, confirmEmailDTO.Token);
+            if (!succeeded)
+            {
+                return BadRequest(new { Errors = errors });
+            }
+            return Ok("Email confirmed successfully.");
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshTokenAsync([FromBody] RefreshTokenRequestDTO requestDTO)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                // Parse the expired JWT to get the user ID
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var principal = tokenHandler.ValidateToken(requestDTO.AccessToken, new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = false, // Allow expired token
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = _tokenService.GetIssuer(), // Add this method to ITokenService
+                    ValidAudience = _tokenService.GetAudience(),
+                    IssuerSigningKey = _tokenService.GetKey()
+                }, out var validatedToken);
+
+                var userIdClaim = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+                {
+                    return Unauthorized("Invalid token.");
+                }
+
+                // Verify the refresh token
+                var (isValid, error) = await _tokenService.VerifyRefreshTokenAsync(userId, requestDTO.RefreshToken);
+                if (!isValid)
+                {
+                    return Unauthorized(error);
+                }
+
+                var user = await _userManager.FindByIdAsync(userId.ToString());
+                if (user == null)
+                {
+                    return Unauthorized("User not found.");
+                }
+
+                // Generate new tokens
+                var newAccessToken = await _tokenService.CreateJWTTokenAsync(user);
+                var newRefreshToken = await _tokenService.GenerateRefreshTokenAsync(user.Id);
+
+                // Remove the old refresh token
+                await _tokenService.RemoveRefreshTokenAsync(user.Id);
+
+                var response = _mapper.Map<AuthResponseDTO>(user);
+                response.AccessToken = newAccessToken;
+                response.RefreshToken = newRefreshToken;
+
+                return Ok(response);
+            }
+            catch (SecurityTokenException)
+            {
+                return Unauthorized("Invalid token.");
+            }
+            catch (Exception e)
+            {
+                return StatusCode(500, e.Message);
+            }
+        }
+
+        [HttpPost("logout")]
+        [Authorize]
+        public async Task<IActionResult> LogoutAsync()
+        {
+            var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+            {
+                return Unauthorized("Invalid user ID.");
+            }
+
+            await _tokenService.RemoveRefreshTokenAsync(userId);
+            await _signInManager.SignOutAsync();
+
+            return Ok("Logged out successfully.");
         }
     }
 }

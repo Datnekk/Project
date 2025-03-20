@@ -15,84 +15,79 @@ namespace be.Data
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Service> Services { get; set; }
-        public DbSet<BookingService> BookingServices { get; set; }
+        public DbSet<RoomService> RoomServices { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            List<IdentityRole<int>> roles = new List<IdentityRole<int>>
-            {
+            //Seed Role for Identity
+            List<IdentityRole<int>> roles =
+            [
                 new IdentityRole<int> {Id = 1, Name = "Admin", NormalizedName = "ADMIN"},
-                new IdentityRole<int> {Id = 2, Name = "User", NormalizedName = "USER"}
-            };
+                new IdentityRole<int> {Id = 2, Name = "User", NormalizedName = "USER"},
+                new IdentityRole<int> {Id = 3, Name = "LandLord", NormalizedName = "LANDLORD"}
+            ];
             modelBuilder.Entity<IdentityRole<int>>().HasData(roles);
 
-            // BookingService composite key and relationships
-            modelBuilder.Entity<BookingService>()
-                .HasKey(bs => new { bs.BookingId, bs.ServiceId });
+            // RoomService (Many-to-Many between Room and Service)
 
-            modelBuilder.Entity<BookingService>()
-                .HasOne(bs => bs.Booking)
-                .WithMany(s => s.BookingServices)
-                .HasForeignKey(bs => bs.BookingId)
+            //Composite key
+            modelBuilder.Entity<RoomService>()
+                .HasKey(rs => new { rs.RoomId, rs.ServiceId });
+
+            modelBuilder.Entity<RoomService>()
+                .HasOne(rs => rs.Room)
+                .WithMany(r => r.RoomServices)
+                .HasForeignKey(rs => rs.RoomId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<BookingService>()
-                .HasOne(bs => bs.Service)
-                .WithMany(s => s.BookingServices)
-                .HasForeignKey(bs => bs.ServiceId)
-                .OnDelete(DeleteBehavior.Restrict);
-            
-            // Room-Bookings relationship
-            modelBuilder.Entity<Room>()
-                .HasMany(r => r.Bookings)
-                .WithOne(b => b.Room)
-                .HasForeignKey(b => b.RoomId)
+            modelBuilder.Entity<RoomService>()
+                .HasOne(rs => rs.Service)
+                .WithMany(s => s.RoomServices)
+                .HasForeignKey(rs => rs.ServiceId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Booking-User relationship
+            // Room-Booking (One-to-One)
             modelBuilder.Entity<Booking>()
-                .HasOne(b => b.User)
-                .WithMany(p => p.Bookings)
-                .HasForeignKey(b => b.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
-            
-            // Booking-Room relationship
-            modelBuilder.Entity<Booking>()
-                .HasOne(b => b.Room)
-                .WithMany(u => u.Bookings)
-                .HasForeignKey(b => b.RoomId)
+                .HasOne(r => r.Room)
+                .WithOne()
+                .HasForeignKey<Booking>(b => b.RoomId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Booking-Payment relationship
             modelBuilder.Entity<Booking>()
-                .HasOne(b => b.Payment)
-                .WithOne(p => p.Booking)
-                .HasForeignKey<Payment>(p => p.BookingId)
-                .OnDelete(DeleteBehavior.Cascade);
-            
-            // Booking-BookingService relationship
-            modelBuilder.Entity<BookingService>()
-                .HasOne(bs => bs.Booking)
-                .WithMany(b => b.BookingServices)
-                .HasForeignKey(bs => bs.BookingId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .HasIndex(b => b.RoomId)
+                .IsUnique();
 
-            // Booking-User relationship
+            // User-Room (One-to-Many)
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.Rooms)
+                .WithOne(r => r.User)
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Booking-User (One-to-Many)
             modelBuilder.Entity<User>()
                 .HasMany(u => u.Bookings)
                 .WithOne(b => b.User)
                 .HasForeignKey(b => b.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // UserToken relationship
-            modelBuilder.Entity<UserToken>()
-                .HasOne(ut  => ut.User)
-                .WithMany(u => u.UserTokens)
-                .HasForeignKey(ut => ut.UserId)
+            // Booking-Payment (One-to-One)
+            modelBuilder.Entity<Payment>()
+                .HasOne(b => b.Booking)
+                .WithOne()
+                .HasForeignKey<Payment>(p => p.BookingId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // User-Payment (One-to-Many)
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.Payments)
+                .WithOne(p => p.User) 
+                .HasForeignKey(p => p.UserId) 
+                .OnDelete(DeleteBehavior.Restrict);
             
+            //Composite keys for Identity tables
             modelBuilder.Entity<IdentityUserLogin<int>>().HasKey(x => new { x.LoginProvider, x.ProviderKey });
 
             modelBuilder.Entity<IdentityUserRole<int>>().HasKey(x => new { x.UserId, x.RoleId });
