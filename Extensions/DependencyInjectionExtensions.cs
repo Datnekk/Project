@@ -13,6 +13,7 @@ public static class DependencyInjectionExtensions
         services.AddScoped<IRoomRepository, RoomRepository>();
         services.AddScoped<IBookingRepository, BookingRepository>();
         services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<IServiceRepository, ServiceRepository>();
 
         return services;
     }

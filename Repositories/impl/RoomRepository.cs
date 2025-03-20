@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using be.Models;
 
 namespace be.Repositories.impl
@@ -22,13 +21,10 @@ namespace be.Repositories.impl
             await _roomRepository.DeleteAsync(id, cancellationToken);
         }
 
-        public async Task<(IEnumerable<Room> Data, int TotalCount)> GetAsync(
-            Expression<Func<Room, bool>> filter,
-            Func<IQueryable<Room>, IOrderedQueryable<Room>> orderBy, 
-            int? pageNumber = null, int? pageSize = null, 
+        public async Task<IEnumerable<Room>> GetAsync(
             CancellationToken cancellationToken = default)
         {
-            return await _roomRepository.GetAsync(filter, orderBy, pageNumber, pageSize, cancellationToken);
+            return await _roomRepository.GetAsync(cancellationToken);
         }
 
         public async Task<Room> GetByIdAsync(int id, CancellationToken cancellationToken = default)

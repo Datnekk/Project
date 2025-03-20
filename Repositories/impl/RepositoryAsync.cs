@@ -15,32 +15,12 @@ public class RepositoryAsync<T> : IRepositoryAsync<T> where T : class
         _dbSet = context.Set<T>();
     }
 
-    public async Task<(IEnumerable<T> Data, int TotalCount)> GetAsync(
-        Expression<Func<T, bool>> filter, 
-        Func<IQueryable<T>, 
-        IOrderedQueryable<T>> orderBy, 
-        int? pageNumber = null, 
-        int? pageSize = null, 
+    public async Task<IEnumerable<T>> GetAsync(
         CancellationToken cancellationToken = default)
     {
-        IQueryable<T> query = _dbSet;
-
-        if(filter != null){
-            query = query.Where(filter);
-        }
-
-        int totalCount = await query.CountAsync(cancellationToken);
-
-        if(orderBy != null){
-            query = orderBy(query);
-        }
-
-        if(pageNumber.HasValue && pageSize.HasValue ){
-            query = query.Skip((pageNumber.Value - 1) * pageSize.Value).Take(pageSize.Value);
-        }
-
-        var data = await query.ToListAsync(cancellationToken);
-        return (data, totalCount);
+       IQueryable<T> query = _dbSet;
+       var data = query.ToListAsync(cancellationToken);
+       return await data;
     }
 
     public async Task AddAsync(T entity, CancellationToken cancellationToken = default)

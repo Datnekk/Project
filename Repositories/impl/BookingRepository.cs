@@ -1,96 +1,38 @@
-using be.Data;
-using be.Helpers;
 using be.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace be.Repositories.impl
 {
     public class BookingRepository : IBookingRepository
     {
-        private readonly ApplicationDbContext _context;
-
-        public BookingRepository(ApplicationDbContext context)
+        private readonly IRepositoryAsync<Booking> _bookingRepository;
+        public BookingRepository(IRepositoryAsync<Booking> bookingRepository)
         {
-            _context = context;
-        }
-        public async Task<Booking> CreateAsync(Booking booking)
-        {
-            await _context.Bookings.AddAsync(booking);
-
-            await _context.SaveChangesAsync();
-
-            return (await _context.Bookings
-                                 .Include(b => b.Room)
-                                 .FirstOrDefaultAsync(b => b.BookingId == booking.BookingId))!;
+            _bookingRepository = bookingRepository;
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task AddAsync(Booking entity, CancellationToken cancellationToken = default)
         {
-            var booking = await _context.Bookings.FirstOrDefaultAsync(x => x.BookingId == id);
-
-            if (booking == null)
-                return false;
-
-            _context.Bookings.Remove(booking);
-            await _context.SaveChangesAsync();
-            return true;
+            await _bookingRepository.AddAsync(entity, cancellationToken);
         }
 
-        public async Task<IEnumerable<Booking>> GetAllAsync(BookingQueryObject query)
+        public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
         {
-            var booking = _context.Bookings.Include(x => x.Room).AsQueryable();
-
-            if (query.CheckInDate.HasValue)
-            {
-            booking = booking.Where(b => b.CheckInDate >= query.CheckInDate.Value);
-            }
-
-            if (query.CheckOutDate.HasValue)
-            {
-                booking = booking.Where(b => b.CheckOutDate <= query.CheckOutDate.Value);
-            }
-
-            if (query.Status.HasValue)
-            {
-                booking = booking.Where(b => b.Status == query.Status.Value);
-            }
-
-            if(!string.IsNullOrWhiteSpace(query.SortBy))
-            {
-                if (query.SortBy.ToLower().Equals("checkindate", StringComparison.OrdinalIgnoreCase))
-                {
-                    booking = query.IsDecsending ? booking.OrderByDescending(b => b.CheckInDate) : booking.OrderBy(b => b.CheckInDate);
-                }
-                else if (query.SortBy.ToLower() == "checkoutdate")
-                {
-                    booking = query.IsDecsending ? booking.OrderByDescending(b => b.CheckOutDate) : booking.OrderBy(b => b.CheckOutDate);
-                }
-                else if (query.SortBy.ToLower() == "status")
-                {
-                    booking = query.IsDecsending ? booking.OrderByDescending(b => b.Status) : booking.OrderBy(b => b.Status);
-                }
-            }
-
-            return await booking.ToListAsync();
+            await _bookingRepository.DeleteAsync(id, cancellationToken);
         }
 
-        public async Task<Booking?> GetByIdAsync(int id)
+        public async Task<IEnumerable<Booking>> GetAsync(CancellationToken cancellationToken = default)
         {
-            return await _context.Bookings
-                                 .Include(x => x.Room)
-                                 .FirstOrDefaultAsync(x => x.BookingId == id);
+            return await _bookingRepository.GetAsync(cancellationToken);
         }
 
-        public async Task<Booking?> UpdateAsync(int id, Booking booking)
+        public async Task<Booking> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
-            var existingBooking = await _context.Bookings.FirstOrDefaultAsync(x => x.BookingId == id);
+            return await _bookingRepository.GetByIdAsync(id, cancellationToken);
+        }
 
-            if (existingBooking == null)
-                return null;
-
-            _context.Entry(existingBooking).CurrentValues.SetValues(booking);
-            await _context.SaveChangesAsync();
-            return existingBooking;
+        public async Task UpdateAsync(Booking entity, CancellationToken cancellationToken = default)
+        {
+            await _bookingRepository.UpdateAsync(entity, cancellationToken);
         }
     }
 }

@@ -31,29 +31,11 @@ namespace be.Repositories.impl
             }
         }
 
-        public (IEnumerable<T> Data, int TotalCount) Get(Expression<Func<T, bool>> filter, Func<IQueryable<T>, IOrderedQueryable<T>> orderBy, int? pageNumber = null, int? pageSize = null)
+        public IEnumerable<T> Get()
         {
-           IQueryable<T> query = _dbSet;
-
-            if (filter != null)
-            {
-                query = query.Where(filter);
-            }
-
-            int totalCount = query.Count();
-
-            if (orderBy != null)
-            {
-                query = orderBy(query);
-            }
-
-            if (pageNumber.HasValue && pageSize.HasValue)
-            {
-                query = query.Skip((pageNumber.Value - 1) * pageSize.Value).Take(pageSize.Value);
-            }
-
+            IQueryable<T> query = _dbSet;
             var data = query.ToList();
-            return (data, totalCount);
+            return data;
         }
 
         public T GetById(int id)

@@ -1,6 +1,5 @@
 using AutoMapper;
 using be.Dtos.Booking;
-using be.Helpers;
 using be.Models;
 using be.Repositories;
 using Microsoft.AspNetCore.Authorization;
@@ -25,9 +24,9 @@ namespace be.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> getAll([FromQuery] BookingQueryObject query)
+        public async Task<IActionResult> GetAll(CancellationToken cancellationToken = default)
         {
-            var bookings = await _bookingRepository.GetAllAsync(query);
+            var bookings = await _bookingRepository.GetAsync(cancellationToken);
 
             var bookingsDto = _mapper.Map<IEnumerable<BookingReadDTO>>(bookings);
 
@@ -36,9 +35,9 @@ namespace be.Controllers
 
         [HttpGet("{id:int}")]
         [Authorize]
-        public async Task<IActionResult> getById([FromRoute] int id)
+        public async Task<IActionResult> GetById([FromRoute] int id, CancellationToken cancellationToken = default)
         {
-            var booking = await _bookingRepository.GetByIdAsync(id);
+            var booking = await _bookingRepository.GetByIdAsync(id, cancellationToken);
 
             if (booking == null)
             {
@@ -52,7 +51,7 @@ namespace be.Controllers
 
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> create([FromBody] BookingCreateDTO bookingDto)
+        public async Task<IActionResult> Create([FromBody] BookingCreateDTO bookingDto, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid)
             {
@@ -61,46 +60,53 @@ namespace be.Controllers
 
             var booking = _mapper.Map<Booking>(bookingDto);
 
-            var createdBooking = await _bookingRepository.CreateAsync(booking);
+            await _bookingRepository.AddAsync(booking, cancellationToken);
 
-            var bookingReadDto = _mapper.Map<BookingReadDTO>(createdBooking);
+            var bookingReadDto = _mapper.Map<BookingReadDTO>(booking);
 
-            return CreatedAtAction(nameof(getById), new { id = bookingReadDto.BookingId }, bookingReadDto);
+            return CreatedAtAction(nameof(GetById), new { id = bookingReadDto.BookingId }, bookingReadDto);
         }
 
         [HttpPut("{id:int}")]
         [Authorize]
-        public async Task<IActionResult> update([FromRoute] int id, [FromBody] BookingUpdateDTO bookingDto)
+        public async Task<IActionResult> Update([FromRoute] int id, [FromBody] BookingUpdateDTO bookingDto, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var booking = _mapper.Map<Booking>(bookingDto);
+            var existingBooking = await _bookingRepository.GetByIdAsync(id, cancellationToken);
 
-            var updatedBooking = await _bookingRepository.UpdateAsync(id, booking);
-
-            if (updatedBooking == null)
+            if (existingBooking == null)
             {
                 return NotFound();
             }
 
-            var bookingReadDto = _mapper.Map<BookingReadDTO>(updatedBooking);
+            var booking = _mapper.Map<Booking>(bookingDto);
 
+            booking.BookingId = id;
+
+            await _bookingRepository.UpdateAsync(booking, cancellationToken);
+
+            var bookingReadDto = _mapper.Map<BookingReadDTO>(booking);
+            
             return Ok(bookingReadDto);
         }
 
         [HttpDelete("{id:int}")]
         [Authorize]
-        public async Task<IActionResult> delete([FromRoute] int id)
+        public async Task<IActionResult> Delete([FromRoute] int id, CancellationToken cancellationToken = default)
         {
-            var deleted = await _bookingRepository.DeleteAsync(id);
-
-            if (!deleted)
-            {
+            var booking = await _bookingRepository.GetByIdAsync(id, cancellationToken);
+            
+            if(booking == null){
+                
                 return NotFound();
+            
             }
+
+            await _bookingRepository.DeleteAsync(id, cancellationToken);
 
             return NoContent();
         }
