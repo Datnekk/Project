@@ -1,15 +1,13 @@
-using be.Helpers;
 using be.Models;
 
-namespace be.Repositories
+namespace be.Repositories;
+
+public interface IUserRepository
 {
-    public interface IUserRepository
-    {
-        Task<IEnumerable<User>> GetAllAsync(UserQueryObject query);
-        Task<User?> GetByIdAsync(int id);
-        Task<User?> UpdateAsync(int id, User user);
-        Task<bool> DeleteAsync(int id);
-        Task<IEnumerable<Booking>> GetBookingsByUserIdAsync(int userId, BookingQueryObject query);
-        Task<bool> AssignRoleAsync(int id, string role);
-    }
+    Task<bool> AssignRoleAsync(int id, string role, CancellationToken cancellationToken = default);
+    Task<User> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+    Task<User> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
+    Task<bool> CreateAsync(User user, string password, CancellationToken cancellationToken = default);
+    Task<bool> UpdateAsync(User user, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default);
 }

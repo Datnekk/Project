@@ -1,121 +1,63 @@
-using be.Data;
-using be.Helpers;
 using be.Models;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 
 namespace be.Repositories.impl
 {
     public class UserRepository : IUserRepository
     {
-        private readonly ApplicationDbContext _context;
         private readonly UserManager<User> _userManager;
-        private readonly RoleManager<IdentityRole<int>> _roleManager;
 
-
-        public UserRepository(ApplicationDbContext context, UserManager<User> userManager, RoleManager<IdentityRole<int>> roleManager)
-        {
-            _context = context;
-            
+        public UserRepository(UserManager<User> userManager)
+        {            
             _userManager = userManager;
-
-            _roleManager = roleManager;
         }
 
-        public async Task<bool> AssignRoleAsync(int id, string role)
+        public async Task<bool> AssignRoleAsync(int id, string role, CancellationToken cancellationToken = default)
         {
             var user = await _userManager.FindByIdAsync(id.ToString());
-
-            if(user == null)
-                return false;
-
-            if (!await _roleManager.RoleExistsAsync(role))
+            if (user == null)
             {
                 return false;
             }
-            
-            var res = await _userManager.AddToRoleAsync(user, role);
 
-            return res.Succeeded;
-        }
-        public async Task<bool> DeleteAsync(int id)
-        {
-            var user = await _userManager.FindByIdAsync(id.ToString());
-
-            if (user == null)
-                return false;
-
-            var result = await _userManager.DeleteAsync(user);
-
+            var result = await _userManager.AddToRoleAsync(user, role);
             return result.Succeeded;
         }
 
-        public async Task<IEnumerable<User>> GetAllAsync(UserQueryObject query)
+        public async Task<User> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
-            var user = _userManager.Users.AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(query.Name))
-            {
-                user = user.Where(x => x.UserName.Contains(query.Name));
-            }
-
-            if (!string.IsNullOrWhiteSpace(query.Email))
-            {
-                user = user.Where(x => x.Email.Contains(query.Email));
-            }
-
-            if (!string.IsNullOrWhiteSpace(query.PhoneNumber))
-            {
-                user = user.Where(x => x.PhoneNumber.Contains(query.PhoneNumber));
-            }
-            return await user.ToListAsync();
+            var user = await _userManager.FindByIdAsync(id.ToString()) ?? throw new KeyNotFoundException($"User with ID {id} not found.");
+            return user;
         }
 
-        public async Task<IEnumerable<Booking>> GetBookingsByUserIdAsync(int userId, BookingQueryObject query)
+        public async Task<User> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
         {
-            var userBookings = _context.Bookings
-                .Where(x => x.UserId == userId)
-                .Include(x => x.Room)
-                .AsQueryable();
-
-            if (query.CheckInDate.HasValue)
-            {
-                userBookings = userBookings.Where(b => b.CheckInDate >= query.CheckInDate.Value);
-            }
-
-            if (query.CheckOutDate.HasValue)
-            {
-                userBookings = userBookings.Where(b => b.CheckOutDate <= query.CheckOutDate.Value);
-            }
-
-            if (query.Status.HasValue)
-            {
-                userBookings = userBookings.Where(b => b.Status == query.Status.Value);
-            }
-
-            return await userBookings.ToListAsync();
+            var user = await _userManager.FindByEmailAsync(email) ?? throw new KeyNotFoundException($"User with email {email} not found.");
+            return user;
         }
 
-
-        public async Task<User?> GetByIdAsync(int id)
+        public async Task<bool> CreateAsync(User user, string password, CancellationToken cancellationToken = default)
         {
-            return await _userManager.FindByIdAsync(id.ToString());
+            var result = await _userManager.CreateAsync(user, password);
+            return result.Succeeded;
         }
 
-        public async Task<User?> UpdateAsync(int id, User user)
+        public async Task<bool> UpdateAsync(User user, CancellationToken cancellationToken = default)
         {
-           var existingUser = await _userManager.FindByIdAsync(id.ToString());
+            var result = await _userManager.UpdateAsync(user);
+            return result.Succeeded;
+        }
 
-           if (existingUser == null)
-            return null;
+        public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
+        {
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user == null)
+            {
+                return false;
+            }
 
-            existingUser.Email = user.Email;
-            existingUser.PhoneNumber = user.PhoneNumber;
-            existingUser.UserName = user.UserName;
-
-            var result = await _userManager.UpdateAsync(existingUser);
-
-            return result.Succeeded ? existingUser : null;
+            var result = await _userManager.DeleteAsync(user);
+            return result.Succeeded;
         }
     }
 }

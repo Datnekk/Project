@@ -1,7 +1,6 @@
 using AutoMapper;
 using be.Dtos.Booking;
 using be.Dtos.Users;
-using be.Helpers;
 using be.Models;
 using be.Repositories;
 using Microsoft.AspNetCore.Authorization;
@@ -46,22 +45,6 @@ namespace be.Controllers
 
             var userDto = _mapper.Map<UserReadDTO>(user);
             return Ok(userDto);
-        }
-
-        [HttpGet("{id:int}/bookings")]
-        [Authorize]
-        public async Task<IActionResult> getBookingsByUserId([FromRoute] int id, [FromQuery] BookingQueryObject query){
-
-            var bookings = await _userRepository.GetBookingsByUserIdAsync(id, query);
-
-            if (bookings == null || !bookings.Any())
-            {
-                return NotFound("No bookings found for this user.");
-            }
-
-            var bookingsDto = _mapper.Map<IEnumerable<BookingReadDTO>>(bookings);
-
-            return Ok(bookingsDto);
         }
 
         [HttpPut("{id:int}")]
