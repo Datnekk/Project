@@ -11,5 +11,6 @@ namespace be.Models
     public ICollection<Booking>? Bookings { get; set; } = [];
     public ICollection<Room>? Rooms { get; set; } = [];
     public ICollection<Payment>? Payments { get; set; } = [];
+    public ICollection<RefreshToken> RefreshTokens { get; set; } = [];
     }
 }

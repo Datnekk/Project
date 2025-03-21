@@ -16,6 +16,7 @@ namespace be.Data
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Service> Services { get; set; }
         public DbSet<RoomService> RoomServices { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -86,6 +87,13 @@ namespace be.Data
                 .WithOne(p => p.User) 
                 .HasForeignKey(p => p.UserId) 
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // User-RefreshToken (One-to-Many)
+            modelBuilder.Entity<User>()
+                .HasMany(rt => rt.RefreshTokens)
+                .WithOne(rt => rt.User)
+                .HasForeignKey(rt => rt.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
             
             //Composite keys for Identity tables
             modelBuilder.Entity<IdentityUserLogin<int>>().HasKey(x => new { x.LoginProvider, x.ProviderKey });

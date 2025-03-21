@@ -65,8 +65,21 @@ namespace be.Services
 
         public async Task<string> GenerateRefreshTokenAsync(int userId)
         {
-            var user = await _userManager.FindByIdAsync(userId.ToString()) ?? throw new KeyNotFoundException($"User with ID {userId} not found.");
-            return await _userManager.GenerateUserTokenAsync(user, "RefreshTokenProvider", "RefreshToken");
+            var user = await _userManager.FindByIdAsync(userId.ToString())
+            ?? throw new KeyNotFoundException($"User with ID {userId} not found.");
+
+            var refreshToken = new RefreshToken
+            {
+                UserId = userId,
+                Token = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N"),
+                IssuedAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow.AddDays(30), 
+                IsRevoked = false
+            };
+
+            _context.RefreshTokens.Add(refreshToken);
+            await _context.SaveChangesAsync();
+            return refreshToken.Token;
         }
 
         public async Task<string> GenerateEmailConfirmationTokenAsync(int userId)
@@ -88,22 +101,34 @@ namespace be.Services
 
         public async Task<(bool Succeeded, string Error)> VerifyRefreshTokenAsync(int userId, string token)
         {
-            var user = await _userManager.FindByIdAsync(userId.ToString());
-            if (user == null)
+            var refreshToken = await _context.RefreshTokens
+                                     .FirstOrDefaultAsync(rt => rt.UserId == userId && rt.Token == token);
+
+            if (refreshToken == null)
             {
-                return (false, string.Empty);
+                return (false, "Refresh token not found.");
             }
-            var isValid = await _userManager.VerifyUserTokenAsync(user, "RefreshTokenProvider", "RefreshToken", token);
-            return (isValid, isValid ? string.Empty : "Invalid refresh token.");
+
+            if (refreshToken.IsRevoked)
+            {
+                return (false, "Refresh token has been revoked.");
+            }
+
+            if (refreshToken.ExpiresAt < DateTime.UtcNow)
+            {
+                return (false, "Refresh token has expired.");
+            }
+
+            return (true, string.Empty);
         }
 
         public async Task RemoveRefreshTokenAsync(int userId)
         {
-            var token = await _context.UserTokens
-                .FirstOrDefaultAsync(t => t.UserId == userId && t.LoginProvider == "RefreshTokenProvider" && t.Name == "RefreshToken");
-            if (token != null)
+            var refreshToken = await _context.RefreshTokens
+                                     .FirstOrDefaultAsync(rt => rt.UserId == userId && !rt.IsRevoked);
+            if (refreshToken != null)
             {
-                _context.UserTokens.Remove(token);
+                refreshToken.IsRevoked = true;
                 await _context.SaveChangesAsync();
             }
         }
