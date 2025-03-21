@@ -15,13 +15,15 @@ namespace be.Controllers
     [Route("api/auth")]
     public class AuthController : ControllerBase
     {
+        private readonly ILogger<AuthController> _logger;
         private readonly IMapper _mapper;
         private readonly UserManager<User> _userManager;
         private readonly ITokenService _tokenService;
         private readonly SignInManager<User> _signInManager;
 
-        public AuthController(IMapper mapper, UserManager<User> userManager, ITokenService tokenService, SignInManager<User> signInManager)
+        public AuthController(ILogger<AuthController> logger,IMapper mapper, UserManager<User> userManager, ITokenService tokenService, SignInManager<User> signInManager)
         {
+            _logger = logger;
             _mapper = mapper;
             _userManager = userManager;
             _tokenService = tokenService;
@@ -42,6 +44,7 @@ namespace be.Controllers
             if(!res.Succeeded) return Unauthorized("UserName/Password Not Found");
 
             var accessToken = await _tokenService.CreateJWTTokenAsync(user);
+            
             var refreshToken = await _tokenService.GenerateRefreshTokenAsync(user.Id);
 
             var response = _mapper.Map<AuthResponseDTO>(user);
@@ -118,15 +121,14 @@ namespace be.Controllers
                     return BadRequest(ModelState);
                 }
 
-                // Parse the expired JWT to get the user ID
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var principal = tokenHandler.ValidateToken(requestDTO.AccessToken, new TokenValidationParameters
                 {
                     ValidateIssuer = true,
                     ValidateAudience = true,
-                    ValidateLifetime = false, // Allow expired token
+                    ValidateLifetime = false, 
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = _tokenService.GetIssuer(), // Add this method to ITokenService
+                    ValidIssuer = _tokenService.GetIssuer(), 
                     ValidAudience = _tokenService.GetAudience(),
                     IssuerSigningKey = _tokenService.GetKey()
                 }, out var validatedToken);
@@ -137,7 +139,6 @@ namespace be.Controllers
                     return Unauthorized("Invalid token.");
                 }
 
-                // Verify the refresh token
                 var (isValid, error) = await _tokenService.VerifyRefreshTokenAsync(userId, requestDTO.RefreshToken);
                 if (!isValid)
                 {
@@ -150,11 +151,9 @@ namespace be.Controllers
                     return Unauthorized("User not found.");
                 }
 
-                // Generate new tokens
                 var newAccessToken = await _tokenService.CreateJWTTokenAsync(user);
                 var newRefreshToken = await _tokenService.GenerateRefreshTokenAsync(user.Id);
 
-                // Remove the old refresh token
                 await _tokenService.RemoveRefreshTokenAsync(user.Id);
 
                 var response = _mapper.Map<AuthResponseDTO>(user);
@@ -177,13 +176,21 @@ namespace be.Controllers
         [Authorize]
         public async Task<IActionResult> LogoutAsync()
         {
+            //For Testing Only
+            // foreach (var claim in User.Claims)
+            // {
+            //     Console.WriteLine($"Claim Type: {claim.Type}, Value: {claim.Value}");
+            // }
+
             var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
             {
                 return Unauthorized("Invalid user ID.");
             }
 
             await _tokenService.RemoveRefreshTokenAsync(userId);
+
             await _signInManager.SignOutAsync();
 
             return Ok("Logged out successfully.");

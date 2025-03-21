@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -8,8 +9,8 @@ public static class AuthenticationExtensions
 {
     public static IServiceCollection AddAuthenticationServices(this IServiceCollection services, IConfiguration configuration){
         services.AddAuthentication(options => {
-            options.DefaultAuthenticateScheme = 
-            options.DefaultChallengeScheme =
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultForbidScheme =
             options.DefaultScheme = 
             options.DefaultSignInScheme =
@@ -22,7 +23,10 @@ public static class AuthenticationExtensions
                 ValidAudience = configuration["Jwt:Audience"],
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"])),
+                NameClaimType = JwtRegisteredClaimNames.Sub,
+                RoleClaimType = "role"
             };
+            options.MapInboundClaims = false;
         });
 
         return services;
