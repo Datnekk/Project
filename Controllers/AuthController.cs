@@ -27,7 +27,7 @@ namespace be.Controllers
             _tokenService = tokenService;
             _signInManager = signInManager;
         }
-
+        
         [HttpPost("login")]
         public async Task<IActionResult> LoginAsync([FromBody] LoginDTO loginDTO){
             if(!ModelState.IsValid){
@@ -118,15 +118,14 @@ namespace be.Controllers
                     return BadRequest(ModelState);
                 }
 
-                // Parse the expired JWT to get the user ID
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var principal = tokenHandler.ValidateToken(requestDTO.AccessToken, new TokenValidationParameters
                 {
                     ValidateIssuer = true,
                     ValidateAudience = true,
-                    ValidateLifetime = false, // Allow expired token
+                    ValidateLifetime = false, 
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = _tokenService.GetIssuer(), // Add this method to ITokenService
+                    ValidIssuer = _tokenService.GetIssuer(),
                     ValidAudience = _tokenService.GetAudience(),
                     IssuerSigningKey = _tokenService.GetKey()
                 }, out var validatedToken);
@@ -178,6 +177,7 @@ namespace be.Controllers
         public async Task<IActionResult> LogoutAsync()
         {
             var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+            
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
             {
                 return Unauthorized("Invalid user ID.");

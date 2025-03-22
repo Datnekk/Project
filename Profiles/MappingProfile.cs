@@ -2,6 +2,7 @@ using AutoMapper;
 using be.Dtos.Auth;
 using be.Dtos.Booking;
 using be.Dtos.Rooms;
+using be.Dtos.Services;
 using be.Dtos.Users;
 using be.Models;
 
@@ -45,7 +46,11 @@ namespace be.Profiles
             CreateMap<BookingUpdateDTO, Booking>(); // PUT request mapping
 
             //Services Mappings
-            
+            CreateMap<Service, ServiceReadDTO>(); // GET request mapping
+
+            CreateMap<ServiceCreateDTO, Service>(); // POST request mapping
+
+            CreateMap<ServiceUpdateDTO, Service>().ReverseMap(); // PUT request mapping
         }
     }
 }

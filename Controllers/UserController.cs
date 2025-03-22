@@ -69,6 +69,7 @@ namespace be.Controllers
             }
 
             var userDtoResponse = _mapper.Map<UserReadDTO>(user);
+            
             return Ok(userDtoResponse);
         }
 

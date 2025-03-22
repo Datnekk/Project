@@ -83,15 +83,11 @@ namespace be.Controllers
                 return NotFound();
             }
 
-            var booking = _mapper.Map<Booking>(bookingDto);
+            _mapper.Map(bookingDto, existingBooking);
 
-            booking.BookingId = id;
+            await _bookingRepository.UpdateAsync(existingBooking, cancellationToken);
 
-            await _bookingRepository.UpdateAsync(booking, cancellationToken);
-
-            var bookingReadDto = _mapper.Map<BookingReadDTO>(booking);
-            
-            return Ok(bookingReadDto);
+            return NoContent();
         }
 
         [HttpDelete("{id:int}")]

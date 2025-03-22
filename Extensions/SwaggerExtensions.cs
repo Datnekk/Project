@@ -28,11 +28,23 @@ public static class SwaggerExtensions
                             Id="Bearer"
                         }
                     },
-                    new string[]{}
+                    Array.Empty<string>()
                 }
             });
         });
 
         return services;
+    }
+
+    public static IApplicationBuilder UseSwaggerServices(this IApplicationBuilder app, IWebHostEnvironment environment){
+        if(environment.IsDevelopment()){
+            app.UseSwagger();
+            app.UseSwaggerUI(option =>
+            {
+                option.SwaggerEndpoint("/swagger/v1/swagger.json", "Demo API v1");
+            });
+        }
+
+        return app;
     }
 }

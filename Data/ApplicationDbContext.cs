@@ -5,11 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace be.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<int>, int>
+    public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<User, IdentityRole<int>, int>(options)
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
-        {
-        }
 
         public DbSet<Room> Rooms { get; set; }
         public DbSet<Booking> Bookings { get; set; }

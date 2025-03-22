@@ -76,23 +76,19 @@ namespace be.Controllers
                 return BadRequest(ModelState);
             }
 
-            var existingRoom = _roomRepository.GetByIdAsync(id, cancellationToken);
+            var existingRoom = await _roomRepository.GetByIdAsync(id, cancellationToken);
 
             if(existingRoom == null){
 
-                return NotFound();
+                return NotFound("Room Not Found!");
 
             }
 
-            var room = _mapper.Map<Room>(roomDto);
+            _mapper.Map(roomDto, existingRoom);
 
-            room.RoomId = id;
+            await _roomRepository.UpdateAsync(existingRoom, cancellationToken);
 
-            await _roomRepository.UpdateAsync(room, cancellationToken);
-
-            var roomReadDTO = _mapper.Map<RoomReadDTO>(room);
-
-            return Ok(roomReadDTO);
+            return NoContent();
         }
 
         [HttpDelete("{id:int}")]
