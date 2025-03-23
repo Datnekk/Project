@@ -7,6 +7,7 @@ namespace be.Extensions;
 public static class DependencyInjectionExtensions
 {
     public static IServiceCollection AddDependencyInjectionServices(this IServiceCollection services){
+        
         services.AddScoped(typeof(IRepositoryAsync<>), typeof(RepositoryAsync<>));
         services.AddScoped(typeof(IRepositorySync<>), typeof(RepositorySync<>));
         services.AddScoped<IUserRepository, UserRepository>();
@@ -14,6 +15,7 @@ public static class DependencyInjectionExtensions
         services.AddScoped<IBookingRepository, BookingRepository>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IServiceRepository, ServiceRepository>();
+        services.AddScoped<IUserContext, UserContext>();
 
         return services;
     }

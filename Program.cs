@@ -12,6 +12,7 @@ builder.Services.AddAuthenticationServices(builder.Configuration);
 builder.Services.AddDependencyInjectionServices();
 builder.Services.AddAutoMapperServices();
 builder.Services.AddCorsServices(builder.Configuration, builder.Environment);
+builder.Services.AddHttpContextAccessor();
 
 
 var app = builder.Build();

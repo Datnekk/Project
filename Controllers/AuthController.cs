@@ -18,13 +18,15 @@ namespace be.Controllers
         private readonly IMapper _mapper;
         private readonly UserManager<User> _userManager;
         private readonly ITokenService _tokenService;
+        private readonly IUserContext _userContext;
         private readonly SignInManager<User> _signInManager;
 
-        public AuthController(IMapper mapper, UserManager<User> userManager, ITokenService tokenService, SignInManager<User> signInManager)
+        public AuthController(IMapper mapper, UserManager<User> userManager, ITokenService tokenService, IUserContext userContext, SignInManager<User> signInManager)
         {
             _mapper = mapper;
             _userManager = userManager;
             _tokenService = tokenService;
+            _userContext = userContext;
             _signInManager = signInManager;
         }
         
@@ -130,11 +132,7 @@ namespace be.Controllers
                     IssuerSigningKey = _tokenService.GetKey()
                 }, out var validatedToken);
 
-                var userIdClaim = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
-                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
-                {
-                    return Unauthorized("Invalid token.");
-                }
+                var userId = await _userContext.GetCurrentUserIdAsync();
 
                 // Verify the refresh token
                 var (isValid, error) = await _tokenService.VerifyRefreshTokenAsync(userId, requestDTO.RefreshToken);
@@ -176,14 +174,10 @@ namespace be.Controllers
         [Authorize]
         public async Task<IActionResult> LogoutAsync()
         {
-            var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
-            
-            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
-            {
-                return Unauthorized("Invalid user ID.");
-            }
+            var userId = await _userContext.GetCurrentUserIdAsync();
 
             await _tokenService.RemoveRefreshTokenAsync(userId);
+
             await _signInManager.SignOutAsync();
 
             return Ok("Logged out successfully.");

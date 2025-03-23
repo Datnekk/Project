@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace be.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/services")]
 public class ServiceController : ControllerBase
 {
     private readonly ILogger<ServiceController> _logger;
