@@ -6,6 +6,10 @@ namespace be.Dtos.Rooms
     public class RoomCreateDTO
     {
         [Required]
+        [MaxLength(50, ErrorMessage = "Room name must be at most 50 characters long")]
+        public string RoomName { get; set; }
+
+        [Required]
         [MaxLength(50, ErrorMessage = "Location must be at most 50 characters long")]
         public string Location { get; set; }
 

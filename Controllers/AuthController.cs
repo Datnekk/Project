@@ -19,17 +19,19 @@ namespace be.Controllers
         private readonly IMapper _mapper;
         private readonly UserManager<User> _userManager;
         private readonly ITokenService _tokenService;
+        private readonly IUserContext _userContext;
         private readonly SignInManager<User> _signInManager;
 
-        public AuthController(ILogger<AuthController> logger,IMapper mapper, UserManager<User> userManager, ITokenService tokenService, SignInManager<User> signInManager)
+        public AuthController(IMapper mapper, UserManager<User> userManager, ITokenService tokenService, IUserContext userContext, SignInManager<User> signInManager)
         {
             _logger = logger;
             _mapper = mapper;
             _userManager = userManager;
             _tokenService = tokenService;
+            _userContext = userContext;
             _signInManager = signInManager;
         }
-
+        
         [HttpPost("login")]
         public async Task<IActionResult> LoginAsync([FromBody] LoginDTO loginDTO){
             if(!ModelState.IsValid){
@@ -128,17 +130,14 @@ namespace be.Controllers
                     ValidateAudience = true,
                     ValidateLifetime = false, 
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = _tokenService.GetIssuer(), 
+                    ValidIssuer = _tokenService.GetIssuer(),
                     ValidAudience = _tokenService.GetAudience(),
                     IssuerSigningKey = _tokenService.GetKey()
                 }, out var validatedToken);
 
-                var userIdClaim = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
-                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
-                {
-                    return Unauthorized("Invalid token.");
-                }
+                var userId = await _userContext.GetCurrentUserIdAsync();
 
+                // Verify the refresh token
                 var (isValid, error) = await _tokenService.VerifyRefreshTokenAsync(userId, requestDTO.RefreshToken);
                 if (!isValid)
                 {
@@ -176,18 +175,7 @@ namespace be.Controllers
         [Authorize]
         public async Task<IActionResult> LogoutAsync()
         {
-            //For Testing Only
-            // foreach (var claim in User.Claims)
-            // {
-            //     Console.WriteLine($"Claim Type: {claim.Type}, Value: {claim.Value}");
-            // }
-
-            var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
-
-            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
-            {
-                return Unauthorized("Invalid user ID.");
-            }
+            var userId = await _userContext.GetCurrentUserIdAsync();
 
             await _tokenService.RemoveRefreshTokenAsync(userId);
 

@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using AutoMapper;
 using be.Dtos.Rooms;
 using be.Models;
@@ -13,13 +14,15 @@ namespace be.Controllers
     {
         private readonly ILogger<RoomController> _logger;
         private readonly IMapper _mapper;
+        private readonly IUserContext _userContext;
         private readonly IRoomRepository _roomRepository;
 
-        public RoomController(ILogger<RoomController> logger, IRoomRepository roomRepository, IMapper mapper)
+        public RoomController(ILogger<RoomController> logger, IRoomRepository roomRepository, IMapper mapper, IUserContext userContext)
         {
             _logger = logger;
             _roomRepository = roomRepository;
             _mapper = mapper;
+            _userContext = userContext;
         }
 
         [HttpGet]
@@ -58,7 +61,11 @@ namespace be.Controllers
                 return BadRequest(ModelState);
             }
 
+            var userId = await _userContext.GetCurrentUserIdAsync();
+
             var room = _mapper.Map<Room>(roomDto);
+
+            room.UserId = userId;
 
             await _roomRepository.AddAsync(room, cancellationToken);
 
@@ -76,23 +83,25 @@ namespace be.Controllers
                 return BadRequest(ModelState);
             }
 
-            var existingRoom = _roomRepository.GetByIdAsync(id, cancellationToken);
+            var userId = await _userContext.GetCurrentUserIdAsync();
 
-            if(existingRoom == null){
+            var existingRoom = await _roomRepository.GetByIdAsync(id, cancellationToken);
 
-                return NotFound();
-
+            if(existingRoom == null)
+            {
+                return NotFound("Room Not Found!");
             }
 
-            var room = _mapper.Map<Room>(roomDto);
+            if (existingRoom.UserId != userId)
+            {
+                return Forbid("You are not authorized to update this room.");
+            }
 
-            room.RoomId = id;
+            _mapper.Map(roomDto, existingRoom);
 
-            await _roomRepository.UpdateAsync(room, cancellationToken);
+            await _roomRepository.UpdateAsync(existingRoom, cancellationToken);
 
-            var roomReadDTO = _mapper.Map<RoomReadDTO>(room);
-
-            return Ok(roomReadDTO);
+            return NoContent();
         }
 
         [HttpDelete("{id:int}")]
