@@ -52,6 +52,8 @@ public class AuthService : IAuthService
         
         user.NormalizedEmail = _userManager.NormalizeEmail(registerDTO.Email);
 
+        user.SecurityStamp = Guid.NewGuid().ToString();
+
         var createdUser = await _userManager.CreateAsync(user, registerDTO.Password);
 
         if (!createdUser.Succeeded)
@@ -87,6 +89,7 @@ public class AuthService : IAuthService
 
     public async Task LogoutAsync()
     {
+        _tokenService.DeleteTokenCookie(_httpContextAccessor.HttpContext);
         await _signInManager.SignOutAsync();
     }
 }

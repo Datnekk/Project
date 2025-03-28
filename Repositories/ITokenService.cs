@@ -10,5 +10,6 @@ namespace be.Repositories
         Task<string> GenerateEmailConfirmationTokenAsync(int userId);
         Task<(bool Succeeded, string[] Errors)> ConfirmEmailAsync(int userId, string token);
         void SetTokenCookie(TokenDTO tokenDTO, HttpContext context);
+        void DeleteTokenCookie(HttpContext context);
     }
 }

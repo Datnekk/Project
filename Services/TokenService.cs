@@ -108,6 +108,21 @@ namespace be.Services
             );
         }
 
+        public void DeleteTokenCookie(HttpContext context)
+        {
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                IsEssential = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = DateTimeOffset.UtcNow.AddDays(-1)
+            };
+
+            context.Response.Cookies.Delete("accessToken", cookieOptions);
+            context.Response.Cookies.Delete("refreshToken", cookieOptions);
+        }
+
         private SigningCredentials GetSigningCredentials(){
             var key = Encoding.UTF8.GetBytes(_configuration["JWT:Key"]);
 
