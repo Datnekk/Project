@@ -16,8 +16,7 @@ namespace be.Profiles
 
             CreateMap<RegisterDTO, User>()
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.UserName))
-                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
-                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Address)); // POST request mapping
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email));
 
             CreateMap<User, NewUserDTO>()
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.UserName))

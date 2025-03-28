@@ -13,6 +13,8 @@ namespace be.Models
     
     [Column(TypeName = "decimal(18, 2)")]
     public decimal Amount { get; set; }
+    
+    [Column(TypeName = "datetime")]
     public DateTime CreatedOn { get; set; } = DateTime.Now;
     public PaymentStatus Status { get; set; } = PaymentStatus.Pending;
 

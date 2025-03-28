@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
@@ -11,11 +12,9 @@ public static class AuthenticationExtensions
         services.AddAuthentication(options => {
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultForbidScheme =
-            options.DefaultScheme = 
-            options.DefaultSignInScheme =
             options.DefaultSignOutScheme = JwtBearerDefaults.AuthenticationScheme;
-        }).AddJwtBearer(options => {
+        })
+        .AddJwtBearer(options => {
             options.TokenValidationParameters = new TokenValidationParameters{
                 ValidateIssuer = true,
                 ValidIssuer = configuration["Jwt:Issuer"],
@@ -26,7 +25,12 @@ public static class AuthenticationExtensions
                 NameClaimType = JwtRegisteredClaimNames.Sub,
                 RoleClaimType = "role"
             };
-            options.MapInboundClaims = false;
+        })
+        .AddGoogle(options =>
+        {
+            options.ClientId = configuration["Authentication:Google:ClientId"];
+            options.ClientSecret = configuration["Authentication:Google:ClientSecret"];
+            options.CallbackPath = "/signin-google";
         });
 
         return services;

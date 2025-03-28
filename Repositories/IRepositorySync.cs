@@ -1,5 +1,3 @@
-using System.Linq.Expressions;
-
 namespace be.Repositories;
 
 public interface IRepositorySync<T> where T : class

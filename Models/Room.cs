@@ -8,9 +8,15 @@ namespace be.Models
     [Key]
     public int RoomId { get; set; }
     public int UserId { get; set; }
-    public string RoomName { get; set; }
+    public string Title { get; set; }
     public string Location { get; set; }
     public string? Description { get; set; }
+    public string ImageSrc{ get; set; }
+    public string Category { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public int RoomCount { get; set; }
+    public int BathroomCount { get; set; }
+    public int GuestCount { get; set; }
 
     [Column(TypeName = "decimal(18, 2)")]
     public decimal Price { get; set; }
