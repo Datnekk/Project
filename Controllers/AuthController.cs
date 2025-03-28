@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using AutoMapper;
 using be.Dtos.Auth;
 using be.Models;
@@ -15,14 +16,16 @@ namespace be.Controllers
     [Route("api/auth")]
     public class AuthController : ControllerBase
     {
+        private readonly ILogger<AuthController> _logger;
         private readonly IMapper _mapper;
         private readonly UserManager<User> _userManager;
         private readonly ITokenService _tokenService;
         private readonly IUserContext _userContext;
         private readonly SignInManager<User> _signInManager;
 
-        public AuthController(IMapper mapper, UserManager<User> userManager, ITokenService tokenService, IUserContext userContext, SignInManager<User> signInManager)
+        public AuthController(ILogger<AuthController> logger,IMapper mapper, UserManager<User> userManager, ITokenService tokenService, IUserContext userContext, SignInManager<User> signInManager)
         {
+            _logger = logger;
             _mapper = mapper;
             _userManager = userManager;
             _tokenService = tokenService;
@@ -175,12 +178,109 @@ namespace be.Controllers
         public async Task<IActionResult> LogoutAsync()
         {
             var userId = await _userContext.GetCurrentUserIdAsync();
+            Console.WriteLine($"User ID: {userId}");
 
             await _tokenService.RemoveRefreshTokenAsync(userId);
 
             await _signInManager.SignOutAsync();
 
             return Ok("Logged out successfully.");
+        }
+
+        [HttpGet("external-login")]
+        public IActionResult ExternalLogin(string provider, string returnUrl)
+        {
+            var redirectUrl = Url.Action(nameof(ExternalLoginCallback), "Auth", new { returnUrl }, protocol: Request.Scheme);
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
+            return Challenge(properties, provider);
+        }
+
+        [HttpGet("external-login-callback")]
+        public async Task<IActionResult> ExternalLoginCallback(string returnUrl, string remoteError)
+        {
+            if (remoteError != null)
+            {
+                return BadRequest(new { message = $"Error from external provider: {remoteError}" });
+            }
+
+            var info = await _signInManager.GetExternalLoginInfoAsync();
+            if (info == null)
+            {
+                return BadRequest(new { message = "Error loading external login information." });
+            }
+
+            var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: true, bypassTwoFactor: true);
+
+            string accessToken = string.Empty; 
+            string refreshToken = string.Empty;
+            AuthResponseDTO response = new();
+
+            if (result.Succeeded)
+            {
+                var user = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
+                accessToken = await _tokenService.CreateJWTTokenAsync(user);
+                refreshToken = await _tokenService.GenerateRefreshTokenAsync(user.Id);
+
+                response = _mapper.Map<AuthResponseDTO>(user);
+                response.AccessToken = accessToken;
+                response.RefreshToken = refreshToken;
+
+                return Ok(new { user = response, returnUrl });
+            }
+
+            // If the user doesn't have an account, create one
+            var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+            var name = info.Principal.FindFirstValue(ClaimTypes.Name);
+            var picture = info.Principal.FindFirstValue("picture");
+
+            var newUser = new User
+            {
+                UserName = email,
+                Email = email,
+                Name = name ?? email,
+                EmailConfirmed = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                Image = picture
+            };
+
+            var createResult = await _userManager.CreateAsync(newUser);
+            if (!createResult.Succeeded)
+            {
+                return BadRequest(new { errors = createResult.Errors.Select(e => e.Description) });
+            }
+
+            var addLoginResult = await _userManager.AddLoginAsync(newUser, info);
+            if (!addLoginResult.Succeeded)
+            {
+                return BadRequest(new { errors = addLoginResult.Errors.Select(e => e.Description) });
+            }
+
+            await _signInManager.SignInAsync(newUser, isPersistent: true);
+
+            accessToken = await _tokenService.CreateJWTTokenAsync(newUser);
+            refreshToken = await _tokenService.GenerateRefreshTokenAsync(newUser.Id);
+
+            response = _mapper.Map<AuthResponseDTO>(newUser);
+            response.AccessToken = accessToken;
+            response.RefreshToken = refreshToken;
+
+            return Ok(new { user = response, returnUrl });
+        }
+
+        [HttpGet("me")]
+        [Authorize]
+        public async Task<IActionResult> GetCurrentUser()
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return Unauthorized(new { message = "User not found." });
+            }
+
+            var response = _mapper.Map<AuthResponseDTO>(user);
+            return Ok(response);
         }
     }
 }

@@ -1,5 +1,3 @@
-using System.Linq.Expressions;
-
 namespace be.Repositories;
 
 public interface IRepositoryAsync<T> where T : class

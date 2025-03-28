@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using be.Models.enums;
 
 namespace be.Dtos.Rooms
 {

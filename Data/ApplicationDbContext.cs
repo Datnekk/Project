@@ -91,6 +91,9 @@ namespace be.Data
                 .WithOne(rt => rt.User)
                 .HasForeignKey(rt => rt.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<UserFavorite>()
+                .HasKey(uf => new { uf.UserId, uf.FavoriteId });
             
             //Composite keys for Identity tables
             modelBuilder.Entity<IdentityUserLogin<int>>().HasKey(x => new { x.LoginProvider, x.ProviderKey });

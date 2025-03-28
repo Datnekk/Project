@@ -39,8 +39,8 @@ namespace be.Services
             {
                 new(JwtRegisteredClaimNames.Sub, user.Id.ToString()), 
                 new(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
-                new(JwtRegisteredClaimNames.Name, user.Name ?? string.Empty),
-                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()) 
+                new(JwtRegisteredClaimNames.Name, user.UserName ?? string.Empty),
+                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
             var roles = await _userManager.GetRolesAsync(user);
