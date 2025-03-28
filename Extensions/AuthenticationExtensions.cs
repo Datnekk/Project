@@ -25,6 +25,19 @@ public static class AuthenticationExtensions
                 NameClaimType = JwtRegisteredClaimNames.Sub,
                 RoleClaimType = "role"
             };
+
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = ctx => 
+                {
+                    ctx.Request.Cookies.TryGetValue("accessToken", out var accessToken);
+                    if(!string.IsNullOrEmpty(accessToken)){
+                        ctx.Token = accessToken;
+                    }
+
+                    return Task.CompletedTask;
+                }
+            };
         })
         .AddGoogle(options =>
         {
