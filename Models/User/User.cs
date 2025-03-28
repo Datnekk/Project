@@ -6,7 +6,6 @@ namespace be.Models
 {
     public class User : IdentityUser<int>
     {
-        public string Name { get; set; } = string.Empty;
         public string Address { get; set; } = string.Empty;
         public Gender? Gender { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

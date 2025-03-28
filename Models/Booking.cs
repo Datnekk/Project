@@ -10,9 +10,7 @@ namespace be.Models
         public int BookingId { get; set; }
         public int UserId { get; set; }
         public int RoomId { get; set; }
-        [Column(TypeName = "datetime")]
         public DateTime CheckInDate { get; set; }
-        [Column(TypeName = "datetime")]
         public DateTime CheckOutDate { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public BookingStatus Status { get; set; } = BookingStatus.Pending;

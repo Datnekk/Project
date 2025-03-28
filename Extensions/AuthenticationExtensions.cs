@@ -9,11 +9,8 @@ public static class AuthenticationExtensions
 {
     public static IServiceCollection AddAuthenticationServices(this IServiceCollection services, IConfiguration configuration){
         services.AddAuthentication(options => {
-            options.DefaultAuthenticateScheme = 
-            options.DefaultChallengeScheme =
-            options.DefaultForbidScheme =
-            options.DefaultScheme = 
-            options.DefaultSignInScheme =
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultSignOutScheme = JwtBearerDefaults.AuthenticationScheme;
         })
         .AddJwtBearer(options => {

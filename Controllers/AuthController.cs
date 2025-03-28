@@ -38,13 +38,13 @@ namespace be.Controllers
             if(!ModelState.IsValid){
                 return BadRequest(ModelState);
             }
-            var user = await _userManager.Users.FirstOrDefaultAsync(x => x.UserName == loginDTO.UserName);
+            var user = await _userManager.Users.FirstOrDefaultAsync(x => x.Email == loginDTO.Email);
 
-            if(user == null) return Unauthorized("Invalid UserName!");
+            if(user == null) return Unauthorized("Invalid Email!");
 
             var res = await _signInManager.CheckPasswordSignInAsync(user, loginDTO.Password, false);
 
-            if(!res.Succeeded) return Unauthorized("UserName/Password Not Found");
+            if(!res.Succeeded) return Unauthorized("Email/Password Not Found");
 
             var accessToken = await _tokenService.CreateJWTTokenAsync(user);
             var refreshToken = await _tokenService.GenerateRefreshTokenAsync(user.Id);
@@ -237,7 +237,6 @@ namespace be.Controllers
             {
                 UserName = email,
                 Email = email,
-                Name = name ?? email,
                 EmailConfirmed = true,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
