@@ -1,9 +1,9 @@
-﻿using Final_Project.Models.Vnpay;
-using System.Net.Sockets;
+﻿using System.Net.Sockets;
 using System.Net;
 using System.Text;
 using System.Security.Cryptography;
 using System.Globalization;
+using be.Models.Vnpay;
 
 namespace Final_Project.Libraries
 {
@@ -172,7 +172,7 @@ namespace Final_Project.Libraries
     }
     public class VnPayCompare : IComparer<string>
     {
-        public int Compare(string x, string y)
+        public int Compare(string? x, string? y)
         {
             if (x == y) return 0;
             if (x == null) return -1;

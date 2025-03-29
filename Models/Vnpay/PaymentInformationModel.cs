@@ -1,4 +1,4 @@
-﻿namespace Final_Project.Models.Vnpay
+﻿namespace be.Models.Vnpay
 {
     public class PaymentInformationModel
     {

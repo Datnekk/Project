@@ -1,6 +1,6 @@
-﻿using EXE_Bussiness.Model.PaymentModel;
-using Final_Project.Models.Vnpay;
-using Final_Project.Services.Vnpay;
+﻿using be.Models.Vnpay;
+using be.Repositories;
+using EXE_Bussiness.Model.PaymentModel;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
