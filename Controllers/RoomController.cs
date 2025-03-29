@@ -5,6 +5,7 @@ using be.Models;
 using be.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Query;
 
 namespace be.Controllers
 {
@@ -27,6 +28,7 @@ namespace be.Controllers
 
         [HttpGet]
         [Authorize]
+        [EnableQuery]
         public async Task<IActionResult> GetAll(CancellationToken cancellationToken = default)
         {
             var rooms = await _roomRepository.GetAsync(cancellationToken);

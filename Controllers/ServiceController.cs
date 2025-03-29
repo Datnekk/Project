@@ -4,6 +4,7 @@ using be.Models;
 using be.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Query;
 
 namespace be.Controllers;
 
@@ -24,6 +25,7 @@ public class ServiceController : ControllerBase
     
     [HttpGet]
     [Authorize]
+    [EnableQuery]
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken = default)
     {
         var services = await _serviceRepository.GetAsync(cancellationToken);
