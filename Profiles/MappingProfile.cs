@@ -18,13 +18,7 @@ namespace be.Profiles
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.UserName))
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email));
 
-            CreateMap<User, NewUserDTO>()
-                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.UserName))
-                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email));
-
-            CreateMap<User, AuthResponseDTO>()
-                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.UserName))
-                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email));
+            CreateMap<User, AuthResponseDTO>();
             
             CreateMap<UserUpdateDTO, User>(); // PUT request mapping
 

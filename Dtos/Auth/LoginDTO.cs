@@ -4,10 +4,10 @@ namespace be.Dtos.Auth
 {
     public class LoginDTO
     {
-        [Required]
+        [Required(ErrorMessage = "Email Is Required")]
         public string Email { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Password Is Required")]
         public string Password { get; set; }        
     }
 }

@@ -1,6 +1,6 @@
 namespace be.Dtos.Auth;
 
-public class RefreshTokenRequestDTO
+public class TokenDTO
 {
     public string AccessToken { get; set; }
     public string RefreshToken { get; set; }
