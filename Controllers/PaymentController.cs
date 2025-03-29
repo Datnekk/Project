@@ -1,10 +1,10 @@
-﻿using be.Models.Vnpay;
+﻿using be.Models.PaymentModel;
+using be.Models.Vnpay;
 using be.Repositories;
-using EXE_Bussiness.Model.PaymentModel;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Final_Project.Controllers
+namespace be.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

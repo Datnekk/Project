@@ -6,25 +6,6 @@ using Microsoft.OData.ModelBuilder;
 
 var builder = WebApplication.CreateBuilder(args);
 
-static IEdmModel GetEdmModel()
-{
-    var builder = new ODataConventionModelBuilder();
-    builder.EntitySet<Booking>("Bookings");
-    builder.EntitySet<Room>("Rooms");
-    builder.EntitySet<Service>("Services");
-    return builder.GetEdmModel();
-}
-
-builder.Services.AddControllers()
-    .AddOData(options => options
-        .Select()
-        .Filter()
-        .OrderBy()
-        .Expand()
-        .Count()
-        .SetMaxTop(100)
-        .AddRouteComponents("api", GetEdmModel()));
-
 
 // Configure services and the app
 builder.Services.AddEndpointsApiExplorer();

@@ -1,4 +1,4 @@
-﻿namespace EXE_Bussiness.Model.PaymentModel
+﻿namespace be.Models.PaymentModel
 {
 	public class PaymentRequest
 	{
