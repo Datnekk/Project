@@ -1,10 +1,5 @@
-using be.Dtos.Booking;
-using be.Dtos.Rooms;
-using be.Dtos.Services;
-using be.Dtos.Users;
 using be.Extensions;
 using be.Models;
-using Final_Project.Services.Vnpay;
 using Microsoft.AspNetCore.OData;
 using Microsoft.OData.Edm;
 using Microsoft.OData.ModelBuilder;
@@ -42,8 +37,7 @@ builder.Services.AddDependencyInjectionServices();
 builder.Services.AddAutoMapperServices();
 builder.Services.AddCorsServices(builder.Configuration, builder.Environment);
 builder.Services.AddHttpContextAccessor();
-//Connect VNPay API
-builder.Services.AddScoped<IVnPayService, VnPayService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline

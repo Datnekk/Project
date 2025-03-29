@@ -1,7 +1,8 @@
-﻿using Final_Project.Libraries;
-using Final_Project.Models.Vnpay;
+﻿using be.Models.Vnpay;
+using be.Repositories;
+using Final_Project.Libraries;
 
-namespace Final_Project.Services.Vnpay
+namespace be.Services
 {
     public class VnPayService : IVnPayService
     {

@@ -18,6 +18,8 @@ public static class DependencyInjectionExtensions
         services.AddScoped<IBookingRepository, BookingRepository>();
         services.AddScoped<IServiceRepository, ServiceRepository>();
         services.AddScoped<IUserContext, UserContext>();
+        services.AddScoped<IVnPayService, VnPayService>();
+
 
         return services;
     }

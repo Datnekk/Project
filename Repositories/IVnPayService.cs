@@ -1,6 +1,6 @@
-﻿using Final_Project.Models.Vnpay;
+﻿using be.Models.Vnpay;
 
-namespace Final_Project.Services.Vnpay
+namespace be.Repositories
 {
     public interface IVnPayService
     {
