@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using be.Dtos.Auth;
 using be.Models;
 using be.Repositories;
@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
+using be.Models.OTP;
 
 namespace be.Services;
 
@@ -16,13 +17,17 @@ public class AuthService : IAuthService
     private readonly IMapper _mapper;
     private readonly SignInManager<User> _signInManager;
     private readonly IHttpContextAccessor _httpContextAccessor;
-    public AuthService(UserManager<User> userManager, ITokenService tokenService, IMapper mapper, SignInManager<User> signInManager, IHttpContextAccessor httpContextAccessor)
+    private readonly IOtpService _otpService;
+    private readonly IEmailService _emailService;
+    public AuthService(UserManager<User> userManager, ITokenService tokenService, IMapper mapper, SignInManager<User> signInManager, IHttpContextAccessor httpContextAccessor, IOtpService otpService, IEmailService emailService)
     {
         _userManager = userManager;
         _tokenService = tokenService;
         _mapper = mapper;
         _httpContextAccessor = httpContextAccessor;
         _signInManager = signInManager;
+        _otpService = otpService;
+        _emailService = emailService;
     }
 
     public async Task<AuthResponseDTO> LoginAsync(LoginDTO loginDTO)
@@ -71,12 +76,19 @@ public class AuthService : IAuthService
 
         var emailToken = await _tokenService.GenerateEmailConfirmationTokenAsync(user.Id);
         // TODO: Implement sending the confirmation email here
+        var otp = new Random().Next(100000, 999999).ToString();
+        await _otpService.SaveOtpAsync(registerDTO.Email, otp);
+        await _emailService.SendEmailAsync(registerDTO.Email, "OTP Verification", $"Your OTP is: {otp}");
 
         var response = _mapper.Map<AuthResponseDTO>(user);
 
         return (response, emailToken);
     }
 
+    public async Task<bool> VerifyOtpAsync(ConfirmOtpDTO confirmOtpDTO)
+    {
+        return await _otpService.VerifyOtpAsync(confirmOtpDTO);
+    }
     public async Task<bool> ConfirmEmailAsync(ConfirmEmailDTO confirmEmailDTO)
     {
         var (succeeded, errors) = await _tokenService.ConfirmEmailAsync(confirmEmailDTO.UserId, confirmEmailDTO.Token);
