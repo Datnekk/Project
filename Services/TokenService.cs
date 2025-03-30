@@ -91,8 +91,8 @@ namespace be.Services
                     Expires = DateTimeOffset.UtcNow.AddMinutes(5),
                     HttpOnly = true,
                     IsEssential = true,
-                    Secure = true,
-                    SameSite = SameSiteMode.None
+                    Secure = false,
+                    SameSite = SameSiteMode.Lax
                 }
             );
 
@@ -102,8 +102,8 @@ namespace be.Services
                     Expires = DateTimeOffset.UtcNow.AddDays(7),
                     HttpOnly = true,
                     IsEssential = true,
-                    Secure = true,
-                    SameSite = SameSiteMode.None
+                    Secure = false,
+                    SameSite = SameSiteMode.Lax
                 }
             );
         }

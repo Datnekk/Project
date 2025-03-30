@@ -1,7 +1,5 @@
 using AutoMapper;
-using be.Dtos.Booking;
 using be.Dtos.Users;
-using be.Models;
 using be.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,12 +13,14 @@ namespace be.Controllers
         private readonly ILogger<UserController> _logger;
         private readonly IMapper _mapper;
         private readonly IUserRepository _userRepository;
+        private readonly IUserContext _userContext;
 
-        public UserController(ILogger<UserController> logger, IMapper mapper, IUserRepository userRepository)
+        public UserController(ILogger<UserController> logger, IMapper mapper, IUserRepository userRepository, IUserContext userContext)
         {
             _logger = logger;
             _userRepository = userRepository;
             _mapper = mapper;
+            _userContext = userContext;
         }
 
         [HttpGet]
@@ -95,6 +95,26 @@ namespace be.Controllers
                 return BadRequest("User Not Found or Role Does Not Exist!");
             }
             return Ok($"User with ID {id} assigned to role {role}");
+        }
+
+        [HttpGet("me")]
+        [Authorize]
+        public async Task<IActionResult> GetCurrentUser(){
+            try
+            {
+                var userDto = await _userContext.GetCurrentUserAsync();
+
+                return Ok(userDto);
+                
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Unauthorized();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error retrieving user: {ex.Message}");
+            }
         }
     }
 }
