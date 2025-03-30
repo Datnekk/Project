@@ -11,11 +11,13 @@ namespace be.Controllers
     {
         private readonly IAuthService _authService;
         private readonly ILogger<AuthController> _logger;
+        private readonly IOtpService _otpService;
 
-        public AuthController(IAuthService authService, ILogger<AuthController> logger)
+        public AuthController(IAuthService authService, ILogger<AuthController> logger, IOtpService otpService)
         {
             _authService = authService;
             _logger = logger;
+            _otpService = otpService;
         }
 
         [HttpPost("login")]
@@ -48,13 +50,51 @@ namespace be.Controllers
             try
             {
                 var (user, emailToken) = await _authService.RegisterAsync(registerDTO);
-                return Ok(new { User = user, EmailConfirmationToken = emailToken });
+                return Ok(new { User = user, EmailConfirmationToken = emailToken, Message = "OTP sent to email." });
             }
             catch (Exception ex)
             {
                 return StatusCode(500, ex.Message);
             }
         }
+
+        [HttpPost("verify-otp")]
+        public async Task<IActionResult> VerifyOtpAsync([FromBody] ConfirmOtpDTO confirmOtpDTO)
+        {
+            try
+            {
+                if (confirmOtpDTO == null)
+                {
+                    return BadRequest("Invalid request.");
+                }
+                if (_otpService == null)
+                {
+                    Console.WriteLine("Error: _otpService is NULL in AuthController!");
+                    throw new ArgumentNullException(nameof(_otpService));
+                }
+
+                if (confirmOtpDTO == null)
+                {
+                    Console.WriteLine("Error: confirmOtpDTO is NULL in VerifyOtpAsync!");
+                    throw new ArgumentNullException(nameof(confirmOtpDTO));
+                }
+
+                var isVerified = await _otpService.VerifyOtpAsync(confirmOtpDTO ?? throw new ArgumentNullException(nameof(confirmOtpDTO)));
+                if (!isVerified) return BadRequest("Invalid or expired OTP.");
+
+                return Ok("OTP verified successfully.");
+            }
+            catch (ArgumentNullException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in VerifyOtpAsync: {ex}");
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
 
         [HttpPost("confirm-email")]
         public async Task<IActionResult> ConfirmEmailAsync([FromBody] ConfirmEmailDTO confirmEmailDTO)
