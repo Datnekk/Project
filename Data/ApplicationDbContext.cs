@@ -14,6 +14,7 @@ namespace be.Data
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Service> Services { get; set; }
         public DbSet<RoomService> RoomServices { get; set; }
+        public DbSet<Category> Categories { get; set; }
         public DbSet<OtpVerification> OtpVerifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -57,6 +58,13 @@ namespace be.Data
             modelBuilder.Entity<Booking>()
                 .HasIndex(b => b.RoomId)
                 .IsUnique();
+
+            // Room-Category (One-to-One)
+            modelBuilder.Entity<Room>()
+                .HasOne(r => r.Category)
+                .WithMany(c => c.Rooms)
+                .HasForeignKey(r => r.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // User-Room (One-to-Many)
             modelBuilder.Entity<User>()

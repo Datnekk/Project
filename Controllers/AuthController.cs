@@ -111,7 +111,6 @@ namespace be.Controllers
         }
 
         [HttpPost("logout")]
-        [Authorize]
         public async Task<IActionResult> LogoutAsync()
         {
             await _authService.LogoutAsync();

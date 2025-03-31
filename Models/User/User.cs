@@ -13,6 +13,7 @@ namespace be.Models
         public string? Image { get; set; }
         public string? AccessToken { get; set; }
         public string? RefreshToken { get; set; }
+        public IList<string> Roles{ get; set; }
         public DateTime RefreshTokenExpiryTime { get; set; }
         public ICollection<UserFavorite> Favorites { get; set; } = [];
         public ICollection<Booking>? Bookings { get; set; } = [];

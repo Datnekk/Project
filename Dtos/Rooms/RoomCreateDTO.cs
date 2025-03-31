@@ -15,11 +15,10 @@ namespace be.Dtos.Rooms
         [MaxLength(500, ErrorMessage = "Description must be at most 500 characters long")]
         public string? Description { get; set; }
 
-        [Required]
         public string ImageSrc { get; set; }
 
         [Required]
-        public string Category { get; set; }
+        public int CategoryId { get; set; }
 
         [Required]
         [Range(1, int.MaxValue, ErrorMessage = "Room count must be at least 1")]

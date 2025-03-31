@@ -1,5 +1,7 @@
 
 using System.Security.Claims;
+using AutoMapper;
+using be.Dtos.Users;
 using be.Models;
 using Microsoft.AspNetCore.Identity;
 
@@ -9,11 +11,38 @@ public class UserContext : IUserContext
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly UserManager<User> _userManager;
+    private readonly IMapper _mapper;
 
-    public UserContext(IHttpContextAccessor httpContextAccessor, UserManager<User> userManager)
+    public UserContext(IHttpContextAccessor httpContextAccessor, UserManager<User> userManager, IMapper mapper)
     {
         _httpContextAccessor = httpContextAccessor;
         _userManager = userManager;
+        _mapper = mapper;
+    }
+
+    public async Task<UserReadDTO?> GetCurrentUserAsync()
+    {
+        var httpContext = _httpContextAccessor.HttpContext ?? throw new InvalidOperationException("HttpContext is not available.");
+
+        if (httpContext?.User?.Identity?.IsAuthenticated != true)
+        {
+            return null; 
+        }
+
+        var user = await _userManager.GetUserAsync(httpContext.User) ?? throw new UnauthorizedAccessException("No authenticated user found.");
+
+        if (user == null)
+        {
+            return null;
+        }
+
+        var roles = await _userManager.GetRolesAsync(user);
+
+        var userDto = _mapper.Map<UserReadDTO>(user);
+
+        userDto.Role = roles;
+
+        return userDto;
     }
 
     public int GetCurrentUserId()
