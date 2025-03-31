@@ -15,11 +15,13 @@ namespace be.Controllers
         private readonly ILogger<BookingController> _logger;
         private readonly IMapper _mapper;
         private readonly IBookingRepository _bookingRepository;
+        private readonly IRoomRepository _roomRepository;
 
-        public BookingController(ILogger<BookingController> logger, IBookingRepository bookingRepository, IMapper mapper)
+        public BookingController(ILogger<BookingController> logger, IBookingRepository bookingRepository, IRoomRepository roomRepository, IMapper mapper)
         {
             _logger = logger;
             _bookingRepository = bookingRepository;
+            _roomRepository = roomRepository;
             _mapper = mapper;
         }
 
@@ -64,6 +66,16 @@ namespace be.Controllers
 
             await _bookingRepository.AddAsync(booking, cancellationToken);
 
+            var room = await _roomRepository.GetByIdAsync(booking.RoomId, cancellationToken);
+            if (room == null)
+            {
+                return NotFound("Room not found.");
+            }
+
+            room.IsAvailable = false;
+
+            await _roomRepository.UpdateAsync(room, cancellationToken);
+
             var bookingReadDto = _mapper.Map<BookingReadDTO>(booking);
 
             return CreatedAtAction(nameof(GetById), new { id = bookingReadDto.BookingId }, bookingReadDto);
@@ -101,10 +113,20 @@ namespace be.Controllers
             if(booking == null){
                 
                 return NotFound();
-            
+            }
+        
+            await _bookingRepository.DeleteAsync(id, cancellationToken);
+
+            var room = await _roomRepository.GetByIdAsync(booking.RoomId, cancellationToken);
+
+            if (room == null)
+            {
+                return NotFound("Room not found.");
             }
 
-            await _bookingRepository.DeleteAsync(id, cancellationToken);
+            room.IsAvailable = true;
+
+            await _roomRepository.UpdateAsync(room, cancellationToken);
 
             return NoContent();
         }

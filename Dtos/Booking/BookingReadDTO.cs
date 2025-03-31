@@ -16,7 +16,5 @@ namespace be.Dtos.Booking
         public DateTime CreatedAt { get; set; }
         
         public BookingStatus Status { get; set; }
-
-        public RoomReadDTO Room { get; set; }
     }
 }
