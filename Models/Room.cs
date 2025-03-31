@@ -12,7 +12,7 @@ namespace be.Models
     public string Location { get; set; }
     public string? Description { get; set; }
     public string ImageSrc{ get; set; }
-    public string Category { get; set; }
+    public int CategoryId { get; set; }
     public DateTime CreatedAt { get; set; }
     public int RoomCount { get; set; }
     public int BathroomCount { get; set; }
@@ -24,6 +24,9 @@ namespace be.Models
 
     [ForeignKey("UserId")]
     public User User { get; set; } = null!;
+    
+    [ForeignKey("CategoryId")]
+    public Category Category { get; set; } = null!;
     public ICollection<RoomService> RoomServices { get; set; } = [];
     }
 }

@@ -27,7 +27,6 @@ namespace be.Controllers
         }
 
         [HttpGet]
-        [Authorize]
         [EnableQuery]
         public async Task<IActionResult> GetAll(CancellationToken cancellationToken = default)
         {

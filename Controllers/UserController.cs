@@ -98,11 +98,15 @@ namespace be.Controllers
         }
 
         [HttpGet("me")]
-        [Authorize]
         public async Task<IActionResult> GetCurrentUser(){
             try
             {
                 var userDto = await _userContext.GetCurrentUserAsync();
+
+                if (userDto == null)
+                {
+                    return Ok(new { isAuthenticated = false, user = (object?)null });
+                }
 
                 return Ok(userDto);
                 

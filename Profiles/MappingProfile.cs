@@ -1,6 +1,7 @@
 using AutoMapper;
 using be.Dtos.Auth;
 using be.Dtos.Booking;
+using be.Dtos.Category;
 using be.Dtos.Rooms;
 using be.Dtos.Services;
 using be.Dtos.Users;
@@ -23,7 +24,7 @@ namespace be.Profiles
             CreateMap<UserUpdateDTO, User>(); // PUT request mapping
 
             // Room Mappings
-            CreateMap<Room, RoomReadDTO>(); // GET request mapping
+            CreateMap<Room, RoomReadDTO>();// GET request mapping
 
             CreateMap<RoomCreateDTO, Room>(); // POST request mapping
 
@@ -44,6 +45,11 @@ namespace be.Profiles
             CreateMap<ServiceCreateDTO, Service>(); // POST request mapping
 
             CreateMap<ServiceUpdateDTO, Service>().ReverseMap(); // PUT request mapping
+
+            //Category Mapping
+            CreateMap<Category, CategoryReadDTO>(); // GET request mapping
+            CreateMap<CategoryCreateDTO, Category>(); // POST request mapping
+            CreateMap<CategoryUpdateDTO, Category>(); // PUT request mapping
         }
     }
 }

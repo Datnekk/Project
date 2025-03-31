@@ -20,11 +20,21 @@ public class UserContext : IUserContext
         _mapper = mapper;
     }
 
-    public async Task<UserReadDTO> GetCurrentUserAsync()
+    public async Task<UserReadDTO?> GetCurrentUserAsync()
     {
         var httpContext = _httpContextAccessor.HttpContext ?? throw new InvalidOperationException("HttpContext is not available.");
 
+        if (httpContext?.User?.Identity?.IsAuthenticated != true)
+        {
+            return null; 
+        }
+
         var user = await _userManager.GetUserAsync(httpContext.User) ?? throw new UnauthorizedAccessException("No authenticated user found.");
+
+        if (user == null)
+        {
+            return null;
+        }
 
         var roles = await _userManager.GetRolesAsync(user);
 

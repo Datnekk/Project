@@ -88,7 +88,7 @@ namespace be.Services
             context.Response.Cookies.Append("accessToken", tokenDTO.AccessToken, 
                 new CookieOptions
                 {
-                    Expires = DateTimeOffset.UtcNow.AddMinutes(5),
+                    Expires = DateTimeOffset.UtcNow.AddDays(5),
                     HttpOnly = true,
                     IsEssential = true,
                     Secure = false,
@@ -152,7 +152,7 @@ namespace be.Services
                 issuer: _configuration["JWT:Issuer"],
                 audience: _configuration["JWT:Audience"],
                 claims: claims,
-                expires: DateTime.Now.AddMinutes(Convert.ToDouble(_configuration["JWT:ExpiryMinutes"])),
+                expires: DateTime.Now.AddDays(Convert.ToDouble(_configuration["JWT:ExpiryMinutes"])),
                 signingCredentials: signingCredentials
             );
 
