@@ -7,18 +7,14 @@ namespace be.Dtos.Booking
     {
         [Required]
         public int UserId { get; set; }
-
         [Required]
         public int RoomId { get; set; }
-
+        [Required]
+        public int TotalPrice { get; set; }
         [Required]
         public DateTime CheckInDate { get; set; }
-
         [Required]
         public DateTime CheckOutDate { get; set; }
-
         public BookingStatus Status { get; set; } = BookingStatus.Pending;
-
-        public List<int>? BookingServiceIds { get; set; }
     }
 }

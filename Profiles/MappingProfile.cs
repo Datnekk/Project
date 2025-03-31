@@ -32,8 +32,7 @@ namespace be.Profiles
 
             // Booking Mappings
             CreateMap<Booking, BookingReadDTO>()
-                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
-                .ForMember(dest => dest.Room, opt => opt.MapFrom(src => src.Room)); // GET request mapping
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString())); // GET request mapping
 
             CreateMap<BookingCreateDTO, Booking>(); // POST request mapping
 
